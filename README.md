@@ -2,12 +2,17 @@
 A Defold port of biosim4 to a native extension
 
 Original biosim4 here: https://github.com/davidrmiller/biosim4
+
 Please read the documents there for details about how biosim4 works.
 
 Thanks to David Miller for sharing his work. And if you havent see his video, I highly recommend it.
+
 https://www.youtube.com/watch?v=N3tRFayqVtk
 
-This project also uses the excellent drawpixels nate extension: https://github.com/AGulev/drawpixels
+This project also uses the excellent drawpixels nate extension: 
+
+https://github.com/AGulev/drawpixels
+
 Thanks to AGulev for this. 
 
 ## Biosim4.ini
