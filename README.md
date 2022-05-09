@@ -28,7 +28,7 @@ Currently the port is not able to run multi-threaded. The numThreads property in
 
 The main execution of the biosim simulation step is in a separate thread and pushes data out every step of operation into a data frame. This frame is then consumed by the Defold update and drawn on screen. This is a mutex locked operation so there may be slight jitters in frame rate.
 
-## Futue
+## Future
 A number of additional features are being developed:
 - imgui interface to update and control the sim
 - a display of the neural structure of an agent - be able to pause, click and display an agent.
