@@ -10,8 +10,13 @@ height = 640
 
 [project]
 title = biosim
+custom_resources = example
 dependencies#0 = https://github.com/AGulev/drawpixels/archive/master.zip
+dependencies#1 = https://github.com/dlannan/extension-imgui/archive/master.zip
 
 [library]
 include_dirs = biosim
+
+[input]
+game_binding = /imgui/bindings/imgui.input_bindingc
 

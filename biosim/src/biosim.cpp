@@ -13,31 +13,6 @@
 #include "imageWriter.h"
 #include "simulator.h"
 
-static int Reverse(lua_State* L)
-{
-    // The number of expected items to be on the Lua stack
-    // once this struct goes out of scope
-    DM_LUA_STACK_CHECK(L, 1);
-
-    // Check and get parameter string from stack
-    char* str = (char*)luaL_checkstring(L, 1);
-
-    // Reverse the string
-    int len = strlen(str);
-    for(int i = 0; i < len / 2; i++) {
-        const char a = str[i];
-        const char b = str[len - i - 1];
-        str[i] = b;
-        str[len - i - 1] = a;
-    }
-
-    // Put the reverse string on the stack
-    lua_pushstring(L, str);
-
-    // Return 1 item
-    return 1;
-}
-
 static int SimulationStart(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -51,13 +26,21 @@ static int SimulationStart(lua_State* L)
     return 0;
 }
 
+static int SimulationMode(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+    int mode = luaL_checknumber(L, 1);
+    BS::simulationMode(mode);
+    return 0;
+}
+
 // Run a single biosim simulation step. 
 //    Fills table with the current biosim frame
 static int SimulationStep(lua_State* L)
 {
     uint8_t color[3];
 
-    DM_LUA_STACK_CHECK(L,1);
+    DM_LUA_STACK_CHECK(L,2);
     luaL_checktype(L, 1, LUA_TTABLE);
 
     BS::simulationStep();
@@ -109,16 +92,19 @@ static int SimulationStep(lua_State* L)
         lua_rawseti(L, 1, idx++); 
     }
 
+    if(BS::runMode == BS::RunMode::STOP || BS::runMode == BS::RunMode::ABORT)
+        idx = 1;
     lua_pushnumber(L, idx);
-    return 1;
+    lua_pushnumber(L, BS::generation);
+    return 2;
 }
 
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
 {
-    {"reverse", Reverse},
     {"SimulationStep", SimulationStep},
     {"SimulationStart", SimulationStart},
+    {"SimulationMode", SimulationMode },
     {0, 0}
 };
 

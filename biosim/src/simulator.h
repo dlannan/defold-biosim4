@@ -42,9 +42,12 @@ extern const Params &p; // read-only simulator config params
 extern Grid grid;  // 2D arena where the individuals live
 extern Signals signals;  // pheromone layers
 extern Peeps peeps;   // container of all the individuals
+extern unsigned generation;
+
 extern void simulator(char *argv);
 extern void simulationStep( void );
 extern void simulationDone( void );
+extern void simulationMode( int mode );
 
 
 // Feeds in-bounds Coords to a function: given a center location and a radius, this

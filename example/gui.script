@@ -1,0 +1,189 @@
+
+local inifile = require('utils.inifile')
+
+local function set_style()
+	imgui.set_style_window_rounding(6)
+	imgui.set_style_frame_rounding(3)
+	imgui.set_style_scrollbar_rounding(10)
+	imgui.set_style_color(imgui.ImGuiCol_Text, 0.90, 0.90, 0.90, 0.90)
+	imgui.set_style_color(imgui.ImGuiCol_TextDisabled, 0.60, 0.60, 0.60, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_WindowBg, 0.09, 0.09, 0.15, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_PopupBg, 0.05, 0.05, 0.10, 0.85)
+	imgui.set_style_color(imgui.ImGuiCol_Border, 0.70, 0.70, 0.70, 0.65)
+	imgui.set_style_color(imgui.ImGuiCol_BorderShadow, 0.00, 0.00, 0.00, 0.00)
+	imgui.set_style_color(imgui.ImGuiCol_FrameBg, 0.00, 0.00, 0.01, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_FrameBgHovered, 0.90, 0.80, 0.80, 0.40)
+	imgui.set_style_color(imgui.ImGuiCol_FrameBgActive, 0.90, 0.65, 0.65, 0.45)
+	imgui.set_style_color(imgui.ImGuiCol_TitleBg, 0.00, 0.00, 0.00, 0.83)
+	imgui.set_style_color(imgui.ImGuiCol_TitleBgCollapsed, 0.40, 0.40, 0.80, 0.20)
+	imgui.set_style_color(imgui.ImGuiCol_TitleBgActive, 0.00, 0.00, 0.00, 0.87)
+	imgui.set_style_color(imgui.ImGuiCol_MenuBarBg, 0.01, 0.01, 0.02, 0.80)
+	imgui.set_style_color(imgui.ImGuiCol_ScrollbarBg, 0.20, 0.25, 0.30, 0.60)
+	imgui.set_style_color(imgui.ImGuiCol_ScrollbarGrab, 0.55, 0.53, 0.55, 0.51)
+	imgui.set_style_color(imgui.ImGuiCol_ScrollbarGrabHovered, 0.56, 0.56, 0.56, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_ScrollbarGrabActive, 0.56, 0.56, 0.56, 0.91)
+	imgui.set_style_color(imgui.ImGuiCol_CheckMark, 0.90, 0.90, 0.90, 0.83)
+	imgui.set_style_color(imgui.ImGuiCol_SliderGrab, 0.70, 0.70, 0.70, 0.62)
+	imgui.set_style_color(imgui.ImGuiCol_SliderGrabActive, 0.30, 0.30, 0.30, 0.84)
+	imgui.set_style_color(imgui.ImGuiCol_Button, 0.48, 0.72, 0.89, 0.49)
+	imgui.set_style_color(imgui.ImGuiCol_ButtonHovered, 0.50, 0.69, 0.99, 0.68)
+	imgui.set_style_color(imgui.ImGuiCol_ButtonActive, 0.80, 0.50, 0.50, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_Header, 0.30, 0.69, 1.00, 0.53)
+	imgui.set_style_color(imgui.ImGuiCol_HeaderHovered, 0.44, 0.61, 0.86, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_HeaderActive, 0.38, 0.62, 0.83, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_ResizeGrip, 1.00, 1.00, 1.00, 0.85)
+	imgui.set_style_color(imgui.ImGuiCol_ResizeGripHovered, 1.00, 1.00, 1.00, 0.60)
+	imgui.set_style_color(imgui.ImGuiCol_ResizeGripActive, 1.00, 1.00, 1.00, 0.90)
+	imgui.set_style_color(imgui.ImGuiCol_PlotLines, 1.00, 1.00, 1.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_PlotLinesHovered, 0.90, 0.70, 0.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_PlotHistogram, 0.90, 0.70, 0.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_PlotHistogramHovered, 1.00, 0.60, 0.00, 1.00)
+	imgui.set_style_color(imgui.ImGuiCol_TextSelectedBg, 0.00, 0.00, 1.00, 0.35)
+end
+
+local function startSim(self)
+
+	self.paused = true
+	self.generation = 0
+	biosim.SimulationStart("data/biosim4.ini")
+	self.iniTable = inifile.load('data/biosim4.ini', "biosim")	
+	self.population = self.iniTable.lookup["population"].value
+	self.popdatacount = self.population * 6 + 1
+end
+
+local function stopSim(self)
+
+	biosim.SimulationMode(0)
+	-- Wait until we get no counts.
+	local agents = {}
+	local count, generation = 2, 2
+	while(count > 1) do
+		count, generation = biosim.SimulationStep(agents)
+	end 
+end 
+
+function init(self)
+
+	msg.post("@render:", "clear_color", {color = vmath.vector4(1, 1, 1, 1)})
+	-- size of texture when scaled to nearest power of two
+	local width = 512
+	local height = 512
+	local channels = 4
+
+	self.resource_path = go.get("/go#sprite", "texture0")
+
+	self.buffer_info = {
+		buffer = buffer.create(width * height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT8, count = channels}}),
+		width = width,
+		height = height,
+		channels = channels
+	}
+
+	self.header = {width = width, height = height, type = resource.TEXTURE_TYPE_2D, format = resource.TEXTURE_FORMAT_RGBA, num_mip_maps = 1}
+	drawpixels.fill(self.buffer_info, 255, 255, 0, 255)
+	resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
+
+	imgui.set_ini_filename()
+	set_style()
+
+	self.values_line = {}
+	self.values_hist = {}
+
+	local fontsize 		= 12.0
+	local fontsizebase 	= 12.0
+	self.fonts 	= {}
+	local regular_data, error = sys.load_resource("/example/fonts/nokiafc22.ttf")
+	self.fonts["Regular"] = imgui.font_add_ttf_data(regular_data, #regular_data, fontsize, fontsizebase)
+	-- local bold_data, error = sys.load_resource("/example/fonts/Montserrat-Bold.ttf")
+	-- self.fonts["Bold"] = imgui.font_add_ttf_data(bold_data, #bold_data, fontsize, fontsizebase)
+	-- local italic_data, error = sys.load_resource("/example/fonts/Montserrat-Italic.ttf")
+	-- self.fonts["Italic"] = imgui.font_add_ttf_data(italic_data, #italic_data, fontsize, fontsizebase)
+	-- local bolditalic_data, error = sys.load_resource("/example/fonts/Montserrat-BoldItalic.ttf")
+	-- self.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, #bolditalic_data, fontsize, fontsizebase)
+
+	startSim(self)
+	-- pprint(self.iniTable)
+	-- 		inifile.save('data/biosim4.ini', self.iniTable)
+end
+
+function update(self, dt)
+
+	imgui.set_next_window_pos( 5, 5 )
+	imgui.set_next_window_size(330, 630)
+	
+	local flags = imgui.WINDOWFLAGS_NOMOVE
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
+	imgui.begin_window("Defold BioSim4", true, flags)
+
+	imgui.text("Thanks to David Miller for BioSim4.")
+	imgui.text("https://github.com/davidrmiller/biosim4")
+	imgui.separator()
+
+	if imgui.button("Reload") then
+
+		inifile.save("data/biosim4.ini", self.iniTable)
+		stopSim(self)
+		startSim(self)
+	end
+
+	imgui.same_line(80)
+	local changed, checked = imgui.checkbox("Pause", self.paused)
+	if changed then	
+		self.paused = checked	
+		if(self.paused == true) then self.mode = 2 else self.mode = 1 end 
+		biosim.SimulationMode( self.mode )
+	end
+
+	imgui.separator()
+	imgui.text_colored("Gen: "..self.generation, 1, 1, 1, 1 )
+	
+	imgui.separator()
+		
+	for k,v in pairs(self.iniTable.biosim) do 
+		-- print(k, v, type(v))
+		if(type(v.value) == "number") then 
+			local changed, newval = imgui.input_double(v.key, v.value)
+			if changed then self.iniTable.biosim[k].value = newval end
+
+		elseif(type(v.value) == "string") then 
+			local changed, newtext = imgui.input_text(v.key, v.value)
+			if changed then self.iniTable.biosim[k].value = newtext end 
+			
+		elseif(type(v.value) == "boolean") then 
+			local changed, checked = imgui.checkbox(tostring(v.key), v.value)
+			if changed then	self.iniTable.biosim[k].value = checked	end
+		end
+	end
+	
+	imgui.end_window()
+
+	local agents = {}
+	local count, generation = biosim.SimulationStep(agents)
+	self.generation = generation
+	if(count == self.popdatacount) then 
+		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)
+		for k = 1, count-1, 6 do 
+			local x = agents[k]
+			local y = agents[k + 1]
+			local sz = agents[k + 2]
+			local r = agents[k + 3]
+			local g = agents[k + 4]
+			local b = agents[k + 5]
+			drawpixels.filled_circle(self.buffer_info, x + 1, y + 1, sz, r, g, b, 255, false)
+		end 
+		resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
+	end
+
+	imgui.set_next_window_pos( 340, 5 )
+	imgui.set_next_window_size(615, 630)
+
+	local flags = imgui.WINDOWFLAGS_NOMOVE
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
+	imgui.begin_window("Generation "..self.generation, true, flags)
+	local img_data = buffer.get_bytes(self.buffer_info.buffer, hash("rgba"))
+	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data, 1 )
+	imgui.image_add(img, 595, 595)
+	imgui.end_window()
+end

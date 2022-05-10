@@ -173,7 +173,7 @@ unsigned spawnNewGeneration(unsigned generation, unsigned murderCount)
         parentGenomes.push_back(peeps[parent.first].genome);
     }
 
-    std::cout << "Gen " << generation << ", " << parentGenomes.size() << " survivors" << std::endl;
+    // std::cout << "Gen " << generation << ", " << parentGenomes.size() << " survivors" << std::endl;
     appendEpochLog(generation, parentGenomes.size(), murderCount);
     //displaySignalUse(); // for debugging only
 

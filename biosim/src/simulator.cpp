@@ -118,42 +118,48 @@ static void DoSimStep( void * _ctx )
 {
     randomUint.initialize(); // seed the RNG, each thread has a private instance
 
-    while(runMode == RunMode::RUN && generation < p.maxGenerations) { // generation loop
+    while(generation < p.maxGenerations) { // generation loop
 
-        murderCount = 0; // for reporting purposes
+        if(runMode == RunMode::RUN) {
+            murderCount = 0; // for reporting purposes
 
-        for (unsigned simStep = 0; simStep < p.stepsPerGeneration; ++simStep) 
-        {
-            // multithreaded loop: index 0 is reserved, start at 1
-            //#pragma omp for schedule(auto)
-            for (unsigned indivIndex = 1; indivIndex <= p.population; ++indivIndex) {
-                if (peeps[indivIndex].alive) {
-                    simStepOneIndiv(peeps[indivIndex], simStep);
+            for (unsigned simStep = 0; simStep < p.stepsPerGeneration; ++simStep) 
+            {
+                // multithreaded loop: index 0 is reserved, start at 1
+                //#pragma omp for schedule(auto)
+                for (unsigned indivIndex = 1; indivIndex <= p.population; ++indivIndex) {
+                    if (peeps[indivIndex].alive) {
+                        simStepOneIndiv(peeps[indivIndex], simStep);
+                    }
+                }
+
+                // In single-thread mode: this executes deferred, queued deaths and movements,
+                // updates signal layers (pheromone), etc.
+                //#pragma omp single
+                {
+                    murderCount += peeps.deathQueueSize();
+                    endOfSimStep(simStep, generation);
                 }
             }
 
-            // In single-thread mode: this executes deferred, queued deaths and movements,
-            // updates signal layers (pheromone), etc.
             //#pragma omp single
             {
-                murderCount += peeps.deathQueueSize();
-                endOfSimStep(simStep, generation);
+                endOfGeneration(generation);
+                paramManager.updateFromConfigFile(generation + 1);
+                unsigned numberSurvivors = spawnNewGeneration(generation, murderCount);
+                // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
+                //     displaySampleGenomes(p.displaySampleGenomes);
+                // }
+                if (numberSurvivors == 0) {
+                    generation = 0;  // start over
+                } else {
+                    ++generation;
+                }
             }
         }
 
-        //#pragma omp single
-        {
-            endOfGeneration(generation);
-            paramManager.updateFromConfigFile(generation + 1);
-            unsigned numberSurvivors = spawnNewGeneration(generation, murderCount);
-            if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
-                displaySampleGenomes(p.displaySampleGenomes);
-            }
-            if (numberSurvivors == 0) {
-                generation = 0;  // start over
-            } else {
-                ++generation;
-            }
+        if(runMode == RunMode::STOP || runMode == RunMode::ABORT) {
+            break;
         }
     }
 }
@@ -186,10 +192,15 @@ void simulator(char *argv)
     //unitTestGridVisitNeighborhood();
 
     initializeGeneration0(); // starting population
-    runMode = RunMode::RUN;
+    runMode = RunMode::PAUSE;
 
     //#pragma omp single
     dmThread::New(DoSimStep, 0x80000, nullptr, "biosim_thread");
+}
+
+void simulationMode( int mode )
+{   
+    runMode = (RunMode)mode;
 }
 
 void simulationStep( void )
