@@ -228,19 +228,10 @@ function update(self, dt)
 	if(count == self.popdatacount) then 
 		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)
 		for k = 1, count-1, AGENT_DATASIZE do 
-			local x 	= agents[k]
-			local y 	= agents[k + 1]
-			local sz 	= agents[k + 2]
-			local r 	= agents[k + 3]
-			local g 	= agents[k + 4]
-			local b 	= agents[k + 5]
-			local age 	= agents[k + 6]
-			local alive	 = agents[k + 7]
-			local startx = agents[k + 8]
-			local starty = agents[k + 9]
+			local x, y, sz, r, g, b  = unpack(agents, k, k+5)
+			local age, alive, startx, starty = unpack( agents, k+6, k+9 ) 
 			drawpixels.filled_circle(self.buffer_info, x + 1, y + 1, sz, r, g, b, 255, false)
 
-			self.life_spans[age] = (self.life_spans[age] or 0) + 1
 			if(alive == 1) then self.survived = self.survived + 1 end 
 			-- tinsert(self.dataStore, { 
 			-- 	pos = { x = x, y = y },
@@ -250,11 +241,18 @@ function update(self, dt)
 			-- 	alive = alive, 
 			-- 	birth_pos = { x = startx, y = starty },
 			-- })
+			-- Only record ages on last gen
+			if(self.generation ~= generation) then 
+				local agechunk = math.floor( age/10 + 0.5 ) * 10
+				self.life_spans[agechunk] = (self.life_spans[agechunk] or 0) + 1
+			end 
 		end 
 		resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
 	end
 	print(self.survived)
-	if(self.generation ~= generation) then tinsert(self.survival_hist, self.survived) end 
+	if(self.generation ~= generation) then 
+		tinsert(self.survival_hist, self.survived) 
+	end 
 	self.generation = generation
 		
 	imgui.set_next_window_pos( 340 * WINDOW_SCALE, 5 )
