@@ -43,6 +43,7 @@ extern Grid grid;  // 2D arena where the individuals live
 extern Signals signals;  // pheromone layers
 extern Peeps peeps;   // container of all the individuals
 extern unsigned generation;
+extern unsigned survivors;
 
 extern void simulator(char *argv);
 extern void simulationStep( void );

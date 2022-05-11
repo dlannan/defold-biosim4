@@ -126,6 +126,7 @@ bool ImageWriter::saveVideoFrame(unsigned simStep, unsigned generation)
 {
     if (!busy) {
         busy = true;
+        std::lock_guard<std::mutex> lck(mutex_);
         // queue job for saveFrameThread()
         // We cache a local copy of data from params, grid, and peeps because
         // those objects will change by the main thread at the same time our
@@ -152,7 +153,6 @@ bool ImageWriter::saveVideoFrame(unsigned simStep, unsigned generation)
 
         // tell thread there's a job to do
         {
-            std::lock_guard<std::mutex> lck(mutex_);
             dataReady = true;
         }
         condVar.notify_one();
@@ -171,6 +171,8 @@ bool ImageWriter::saveVideoFrameSync(unsigned simStep, unsigned generation)
     // We cache a local copy of data from params, grid, and peeps because
     // those objects will change by the main thread at the same time our
     // saveFrameThread() is using it to output a video frame.
+
+    std::unique_lock<std::mutex> lck(mutex_);
     data.simStep = simStep;
     data.generation = generation;
     data.indivLocs.clear();

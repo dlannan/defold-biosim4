@@ -45,8 +45,9 @@ void Peeps::drainDeathQueue()
 {
     for (uint16_t index : deathQueue) {
         auto & indiv = peeps[index];
+        indiv.death = indiv.age;
         grid.set(indiv.loc, 0);
-        indiv.alive = false;
+        //indiv.alive = false;
     }
     deathQueue.clear();
 }

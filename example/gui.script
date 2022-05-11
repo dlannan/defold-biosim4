@@ -70,9 +70,9 @@ local function stopSim(self)
 	biosim.SimulationMode(0)
 	-- Wait until we get no counts.
 	local agents = {}
-	local count, generation = 2, 2
+	local count, generation, survivors = 2, 2, 0
 	while(count > 1) do
-		count, generation = biosim.SimulationStep(agents)
+		count, generation, survivors = biosim.SimulationStep(agents)
 	end 
 end 
 
@@ -187,7 +187,7 @@ function update(self, dt)
 
 	if imgui.button("Reload") then
 
-		inifile.save("data/biosim4.ini", self.iniTable)
+		inifile.save("data/biosim4.ini", self.iniTable, "biosim")
 		stopSim(self)
 		startSim(self)
 	end
@@ -223,36 +223,46 @@ function update(self, dt)
 	imgui.end_window()
 
 	local agents 	= {}
-	self.survived 	= 0
-	local count, generation = biosim.SimulationStep(agents)
+	local newgen 	= nil
+	local count, generation, survivors = biosim.SimulationStep(agents)
+
+	-- Process previous generation
+	if(self.generation ~= generation) then 
+		for k,v in pairs(self.dataStore) do
+			local age = v.age or 0
+			if(death ~= 0) then age = death or 0 end 
+			local agechunk = math.floor( (age/10) + 0.5 ) * 10
+			self.life_spans[agechunk] = (self.life_spans[agechunk] or 0) + 1
+		end 
+		self.survival_hist[generation] = survivors
+		self.dataStore  = {}
+	end 
+-- print(count, generation, survivors)
+
 	if(count == self.popdatacount) then 
 		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)
+		local idx = 1
 		for k = 1, count-1, AGENT_DATASIZE do 
+			self.dataStore[idx] = self.dataStore[idx] or {}
 			local x, y, sz, r, g, b  = unpack(agents, k, k+5)
-			local age, alive, startx, starty = unpack( agents, k+6, k+9 ) 
-			drawpixels.filled_circle(self.buffer_info, x + 1, y + 1, sz, r, g, b, 255, false)
+			local age, death, startx, starty = unpack( agents, k+6, k+9 ) 
+			drawpixels.filled_rect(self.buffer_info, x+1, y+2, sz, sz, r, g, b, 255, false)
+			
+-- print(x, y, sz, r, g, b)
+if(death ~= 0) then print(age, death, startx, starty) end
 
-			if(alive == 1) then self.survived = self.survived + 1 end 
-			-- tinsert(self.dataStore, { 
-			-- 	pos = { x = x, y = y },
-			-- 	size = sz,
-			-- 	color = { r = r, g = g, b = b },
-			-- 	age = age, 
-			-- 	alive = alive, 
-			-- 	birth_pos = { x = startx, y = starty },
-			-- })
-			-- Only record ages on last gen
-			if(self.generation ~= generation) then 
-				local agechunk = math.floor( age/10 + 0.5 ) * 10
-				self.life_spans[agechunk] = (self.life_spans[agechunk] or 0) + 1
-			end 
+			self.dataStore[idx] = { 
+				pos = { x = x, y = y },
+				size = sz,
+				color = { r = r, g = g, b = b },
+				age = age, 
+				death = death, 
+				birth_pos = { x = startx, y = starty },
+			}
+			idx = idx + 1
 		end 
 		resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
 	end
-	print(self.survived)
-	if(self.generation ~= generation) then 
-		tinsert(self.survival_hist, self.survived) 
-	end 
 	self.generation = generation
 		
 	imgui.set_next_window_pos( 340 * WINDOW_SCALE, 5 )
@@ -264,7 +274,7 @@ function update(self, dt)
 	imgui.begin_window("Generation "..self.generation, true, flags)
 	local img_data = buffer.get_bytes(self.buffer_info.buffer, hash("rgba"))
 	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data, 1 )
-	imgui.image_add(img, 595 * WINDOW_SCALE, 595 * WINDOW_SCALE)
+	imgui.image_add(img, 595 * WINDOW_SCALE, 596 * WINDOW_SCALE)
 	imgui.end_window()
 end
 

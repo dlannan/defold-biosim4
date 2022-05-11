@@ -40,7 +40,7 @@ static int SimulationStep(lua_State* L)
 {
     uint8_t color[3];
 
-    DM_LUA_STACK_CHECK(L,2);
+    DM_LUA_STACK_CHECK(L,3);
     luaL_checktype(L, 1, LUA_TTABLE);
 
     BS::simulationStep();
@@ -88,7 +88,7 @@ static int SimulationStep(lua_State* L)
         const BS::Indiv &indiv = BS::peeps[i];
         lua_pushnumber(L, indiv.age);  
         lua_rawseti(L, 1, idx++); 
-        lua_pushnumber(L, indiv.alive?1:0);  
+        lua_pushnumber(L, indiv.death);  
         lua_rawseti(L, 1, idx++); 
         lua_pushnumber(L, indiv.birthLoc.x * BS::p.displayScale);
         lua_rawseti(L, 1, idx++); 
@@ -100,7 +100,8 @@ static int SimulationStep(lua_State* L)
         idx = 1;
     lua_pushnumber(L, idx);
     lua_pushnumber(L, BS::generation);
-    return 2;
+    lua_pushnumber(L, BS::survivors);
+    return 3;
 }
 
 // Functions exposed to Lua

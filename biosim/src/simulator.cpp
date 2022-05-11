@@ -112,6 +112,8 @@ The threads are:
 ********************************************************************************/
 
 static unsigned generation  = 0;
+static unsigned survivors   = 0;
+static double   diversity   = 0.0;
 static unsigned murderCount = 0;
 
 static void DoSimStep( void * _ctx )
@@ -150,6 +152,7 @@ static void DoSimStep( void * _ctx )
                 // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
                 //     displaySampleGenomes(p.displaySampleGenomes);
                 // }
+                survivors = numberSurvivors;
                 if (numberSurvivors == 0) {
                     generation = 0;  // start over
                 } else {

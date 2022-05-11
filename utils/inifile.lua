@@ -60,7 +60,7 @@ function LIP.load(fileName, defaultsection)
 			local datapoint = { key = param, value = value, comments = paramcomments }
 			tinsert(data[section], datapoint)
 			data.lookup[param] = datapoint
-			
+
 			paramcomments = {}
 		end
 	end
@@ -71,21 +71,24 @@ end
 --- Saves all the data from a table to an INI file.
 --@param fileName The name of the INI file to fill. [string]
 --@param data The table containing all the data to store. [table]
-function LIP.save(fileName, data)
+function LIP.save(fileName, data, section)
 	assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
 	assert(type(data) == 'table', 'Parameter "data" must be a table.');
 	local file = assert(io.open(fileName, 'w+b'), 'Error loading file :' .. fileName);
 	local contents = '';
-	for section, param in pairs(data) do
-		-- contents = contents .. ('[%s]\n'):format(section);
-		for key, value in pairs(param) do
-			contents = contents .. '\n'
-			for i, comment in ipairs(value.comments) do 
-				contents = contents .. ('%s\n'):format(tostring(comment));	
+	section = section or "default"
+	for s, param in pairs(data) do
+		if(s == section) then 
+			-- contents = contents .. ('[%s]\n'):format(section);
+			for key, value in pairs(param) do
+				contents = contents .. '\n'
+				for i, comment in ipairs(value.comments) do 
+					contents = contents .. ('%s\n'):format(tostring(comment));	
+				end
+				contents = contents .. ('%s = %s\n'):format(value.key, tostring(value.value));
 			end
-			contents = contents .. ('%s = %s\n'):format(value.key, tostring(value.value));
+			contents = contents .. '\n';
 		end
-		contents = contents .. '\n';
 	end
 	file:write(contents);
 	file:close();
