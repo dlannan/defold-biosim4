@@ -19,7 +19,6 @@ struct Indiv {
     Coord loc;   // refers to a location in grid[][]
     Coord birthLoc;
     unsigned age;       // Age isnt age - its a timer?
-    unsigned death;     // Age at which death occurred
     Genome genome;
     NeuralNet nnet;   // derived from .genome
     float responsiveness;  // 0.0..1.0 (0 is like asleep)

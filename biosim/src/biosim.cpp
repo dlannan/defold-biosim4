@@ -12,6 +12,11 @@
 #include "basicTypes.h"
 #include "imageWriter.h"
 #include "simulator.h"
+#include "genome-neurons.h"
+
+namespace BS {
+    extern uint8_t makeGeneticColor(const Genome &genome);
+}
 
 static int SimulationStart(lua_State* L)
 {
@@ -40,8 +45,9 @@ static int SimulationStep(lua_State* L)
 {
     uint8_t color[3];
 
-    DM_LUA_STACK_CHECK(L,3);
+    DM_LUA_STACK_CHECK(L,1);
     luaL_checktype(L, 1, LUA_TTABLE);
+    luaL_checktype(L, 2, LUA_TTABLE);
 
     BS::simulationStep();
 
@@ -59,22 +65,25 @@ static int SimulationStep(lua_State* L)
 
     auto rgbToLuma = [](uint8_t r, uint8_t g, uint8_t b) { return (r+r+r+b+g+g+g+g) / 8; };
     
-    for (size_t i = 0; i < data.indivLocs.size(); ++i) {
-        int c = data.indivColors[i];
-            color[0] = (c);                  // R: 0..255
-            color[1] = ((c & 0x1f) << 3);    // G: 0..255
-            color[2] = ((c & 7)    << 5);    // B: 0..255
+    for (uint16_t index = 1; index <= BS::p.population; ++index) 
+    {
+        const BS::Indiv &indiv = BS::peeps[index];
 
-            // Prevent color mappings to very bright colors (hard to see):
-            if (rgbToLuma(color[0], color[1], color[2]) > maxLumaVal) {
-                if (color[0] > maxColorVal) color[0] %= maxColorVal;
-                if (color[1] > maxColorVal) color[1] %= maxColorVal;
-                if (color[2] > maxColorVal) color[2] %= maxColorVal;
-            }
+        int c = BS::makeGeneticColor(indiv.genome);
+        color[0] = (c);                  // R: 0..255
+        color[1] = ((c & 0x1f) << 3);    // G: 0..255
+        color[2] = ((c & 7)    << 5);    // B: 0..255
 
-        lua_pushnumber(L, data.indivLocs[i].x * BS::p.displayScale);
+        // Prevent color mappings to very bright colors (hard to see):
+        if (rgbToLuma(color[0], color[1], color[2]) > maxLumaVal) {
+            if (color[0] > maxColorVal) color[0] %= maxColorVal;
+            if (color[1] > maxColorVal) color[1] %= maxColorVal;
+            if (color[2] > maxColorVal) color[2] %= maxColorVal;
+        }
+
+        lua_pushnumber(L, indiv.loc.x * BS::p.displayScale);
         lua_rawseti(L, 1, idx++); 
-        lua_pushnumber(L, ((BS::p.sizeY - data.indivLocs[i].y) - 1) * BS::p.displayScale); 
+        lua_pushnumber(L, ((BS::p.sizeY - indiv.loc.y) - 1) * BS::p.displayScale); 
         lua_rawseti(L, 1, idx++); 
         lua_pushnumber(L, BS::p.agentSize);
         lua_rawseti(L, 1, idx++); 
@@ -85,10 +94,10 @@ static int SimulationStep(lua_State* L)
         lua_pushnumber(L, color[2]);  
         lua_rawseti(L, 1, idx++); 
 
-        const BS::Indiv &indiv = BS::peeps[i];
+
         lua_pushnumber(L, indiv.age);  
         lua_rawseti(L, 1, idx++); 
-        lua_pushnumber(L, indiv.death);  
+        lua_pushnumber(L, (int)indiv.alive);  
         lua_rawseti(L, 1, idx++); 
         lua_pushnumber(L, indiv.birthLoc.x * BS::p.displayScale);
         lua_rawseti(L, 1, idx++); 
@@ -96,12 +105,19 @@ static int SimulationStep(lua_State* L)
         lua_rawseti(L, 1, idx++); 
     }
 
+    int genidx = 1;
+    lua_pushnumber(L, BS::generation);
+    lua_rawseti(L, 2, genidx++); 
+    lua_pushnumber(L, BS::survivors);
+    lua_rawseti(L, 2, genidx++); 
+    lua_pushnumber(L, BS::geneticDiversity());
+    lua_rawseti(L, 2, genidx++); 
+
     if(BS::runMode == BS::RunMode::STOP || BS::runMode == BS::RunMode::ABORT)
         idx = 1;
+  
     lua_pushnumber(L, idx);
-    lua_pushnumber(L, BS::generation);
-    lua_pushnumber(L, BS::survivors);
-    return 3;
+    return 1;
 }
 
 // Functions exposed to Lua

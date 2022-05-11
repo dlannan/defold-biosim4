@@ -61,6 +61,7 @@ local function startSim(self)
 	self.life_spans = {} 
 	self.survived = 0
 	self.survival_hist = {}
+	self.diversity_hist = {}
 end
 
 --------------------------------------------------------------------------------
@@ -70,9 +71,11 @@ local function stopSim(self)
 	biosim.SimulationMode(0)
 	-- Wait until we get no counts.
 	local agents = {}
+	local genstats = {}
 	local count, generation, survivors = 2, 2, 0
 	while(count > 1) do
-		count, generation, survivors = biosim.SimulationStep(agents)
+		count = biosim.SimulationStep(agents, genstats)
+		generation, survivors, diversity = unpack(genstats)
 	end 
 end 
 
@@ -165,7 +168,12 @@ local function update_tab2(self)
 
 	imgui.separator()
 
-	imgui.text_colored(" Lifetimes Histogram ", 0, 1, 0, 1 )
+	imgui.text_colored(" Generation Diversity Plot ", 0, 0, 1, 1 )
+	imgui.plot_lines( "", 0, 310 * WINDOW_SCALE, 120 * WINDOW_SCALE, self.diversity_hist )
+
+	imgui.separator()
+
+	imgui.text_colored(" Diversity Histogram ", 0, 1, 0, 1 )
 	imgui.plot_histogram( "", 0, 310 * WINDOW_SCALE, 120 * WINDOW_SCALE, self.life_spans )
 end
 
@@ -223,18 +231,23 @@ function update(self, dt)
 	imgui.end_window()
 
 	local agents 	= {}
+	local genstats 	= {}
 	local newgen 	= nil
-	local count, generation, survivors = biosim.SimulationStep(agents)
+	local count = biosim.SimulationStep(agents, genstats)
+
+	generation = genstats[1]
+	survivors = genstats[2]
+	diversity = genstats[3]
 
 	-- Process previous generation
 	if(self.generation ~= generation) then 
+		
 		for k,v in pairs(self.dataStore) do
-			local age = v.age or 0
-			if(death ~= 0) then age = death or 0 end 
-			local agechunk = math.floor( (age/10) + 0.5 ) * 10
-			self.life_spans[agechunk] = (self.life_spans[agechunk] or 0) + 1
+			local divchunk = math.floor(v.color.r/16) * 32 + math.floor(v.color.g/16) * 8 + math.floor(v.color.b/16)
+			self.life_spans[divchunk] = (self.life_spans[divchunk] or 0) + 1
 		end 
 		self.survival_hist[generation] = survivors
+		self.diversity_hist[generation] = diversity
 		self.dataStore  = {}
 	end 
 -- print(count, generation, survivors)
@@ -245,18 +258,18 @@ function update(self, dt)
 		for k = 1, count-1, AGENT_DATASIZE do 
 			self.dataStore[idx] = self.dataStore[idx] or {}
 			local x, y, sz, r, g, b  = unpack(agents, k, k+5)
-			local age, death, startx, starty = unpack( agents, k+6, k+9 ) 
-			drawpixels.filled_rect(self.buffer_info, x+1, y+2, sz, sz, r, g, b, 255, false)
+			local age, alive, startx, starty = unpack( agents, k+6, k+9 ) 
+			drawpixels.filled_rect(self.buffer_info, x+1, y+1, sz, sz, r, g, b, 255, false)
 			
 -- print(x, y, sz, r, g, b)
-if(death ~= 0) then print(age, death, startx, starty) end
+-- print(age, alive, startx, starty) 
 
 			self.dataStore[idx] = { 
 				pos = { x = x, y = y },
 				size = sz,
 				color = { r = r, g = g, b = b },
 				age = age, 
-				death = death, 
+				alive = alive, 
 				birth_pos = { x = startx, y = starty },
 			}
 			idx = idx + 1

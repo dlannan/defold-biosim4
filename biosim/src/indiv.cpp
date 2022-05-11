@@ -17,7 +17,6 @@ void Indiv::initialize(uint16_t index_, Coord loc_, Genome &&genome_)
     birthLoc = loc_;
     grid.set(loc_, index_);
     age = 0;
-    death = 0;
     oscPeriod = 34; // ToDo !!! define a constant
     alive = true;
     lastMoveDir = Dir::random8();

@@ -72,7 +72,7 @@ The other important variables are:
 **********************************************************************************************/
 void simStepOneIndiv(Indiv &indiv, unsigned simStep)
 {
-    ++indiv.age; // for this implementation, tracks simStep
+    if(indiv.alive == true) ++indiv.age; // for this implementation, tracks simStep
     auto actionLevels = indiv.feedForward(simStep);
     executeActions(indiv, actionLevels);
 }
