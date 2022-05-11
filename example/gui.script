@@ -1,5 +1,10 @@
+local tinsert = table.insert
 
 local inifile = require('utils.inifile')
+
+local WINDOW_SCALE 		= 1.0
+local AGENT_DATASIZE 	= 10
+--------------------------------------------------------------------------------
 
 local function set_style()
 	imgui.set_style_window_rounding(6)
@@ -41,6 +46,8 @@ local function set_style()
 	imgui.set_style_color(imgui.ImGuiCol_TextSelectedBg, 0.00, 0.00, 1.00, 0.35)
 end
 
+--------------------------------------------------------------------------------
+
 local function startSim(self)
 
 	self.paused = true
@@ -48,8 +55,15 @@ local function startSim(self)
 	biosim.SimulationStart("data/biosim4.ini")
 	self.iniTable = inifile.load('data/biosim4.ini', "biosim")	
 	self.population = self.iniTable.lookup["population"].value
-	self.popdatacount = self.population * 6 + 1
+	self.popdatacount = self.population * AGENT_DATASIZE + 1
+
+	self.dataStore = {}
+	self.life_spans = {} 
+	self.survived = 0
+	self.survival_hist = {}
 end
+
+--------------------------------------------------------------------------------
 
 local function stopSim(self)
 
@@ -61,6 +75,8 @@ local function stopSim(self)
 		count, generation = biosim.SimulationStep(agents)
 	end 
 end 
+
+--------------------------------------------------------------------------------
 
 function init(self)
 
@@ -106,10 +122,59 @@ function init(self)
 	-- 		inifile.save('data/biosim4.ini', self.iniTable)
 end
 
+--------------------------------------------------------------------------------
+
+local function update_tab1(self)
+	for k,v in pairs(self.iniTable.biosim) do 
+		-- print(k, v, type(v))
+		if(type(v.value) == "number") then 
+			local changed, newval = imgui.input_double(v.key, v.value)
+			if changed then self.iniTable.biosim[k].value = newval end
+
+		elseif(type(v.value) == "string") then 
+			local changed, newtext = imgui.input_text(v.key, v.value)
+			if changed then self.iniTable.biosim[k].value = newtext end 
+
+		elseif(type(v.value) == "boolean") then 
+			local changed, checked = imgui.checkbox(tostring(v.key), v.value)
+			if changed then	self.iniTable.biosim[k].value = checked	end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
+
+local function makeData(self)
+	self.values_line = {}
+	self.values_hist = {}
+	for i=1, 60 do 
+		local data = math.random(1, 30)
+		self.values_hist[data] = (self.values_hist[data] or 0) + 1
+		table.insert(self.values_line, data)
+	end
+end
+
+--------------------------------------------------------------------------------
+
+local function update_tab2(self)
+
+	makeData(self)
+	
+	imgui.text_colored(" Generation Survival Plot ", 1, 0, 0, 1 )
+	imgui.plot_lines( "", 0, 310 * WINDOW_SCALE, 120 * WINDOW_SCALE, self.survival_hist )
+
+	imgui.separator()
+
+	imgui.text_colored(" Lifetimes Histogram ", 0, 1, 0, 1 )
+	imgui.plot_histogram( "", 0, 310 * WINDOW_SCALE, 120 * WINDOW_SCALE, self.life_spans )
+end
+
+--------------------------------------------------------------------------------
+
 function update(self, dt)
 
 	imgui.set_next_window_pos( 5, 5 )
-	imgui.set_next_window_size(330, 630)
+	imgui.set_next_window_size(330 * WINDOW_SCALE, 630 * WINDOW_SCALE)
 	
 	local flags = imgui.WINDOWFLAGS_NOMOVE
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
@@ -139,44 +204,61 @@ function update(self, dt)
 	imgui.text_colored("Gen: "..self.generation, 1, 1, 1, 1 )
 	
 	imgui.separator()
-		
-	for k,v in pairs(self.iniTable.biosim) do 
-		-- print(k, v, type(v))
-		if(type(v.value) == "number") then 
-			local changed, newval = imgui.input_double(v.key, v.value)
-			if changed then self.iniTable.biosim[k].value = newval end
 
-		elseif(type(v.value) == "string") then 
-			local changed, newtext = imgui.input_text(v.key, v.value)
-			if changed then self.iniTable.biosim[k].value = newtext end 
-			
-		elseif(type(v.value) == "boolean") then 
-			local changed, checked = imgui.checkbox(tostring(v.key), v.value)
-			if changed then	self.iniTable.biosim[k].value = checked	end
-		end
+	imgui.begin_tab_bar("tabs")
+
+	local tab1_open = imgui.begin_tab_item("Ini File")
+	if tab1_open then
+		update_tab1(self)
+		imgui.end_tab_item()
+	end
+
+	local tab2_open = imgui.begin_tab_item("Graphs")
+	if tab2_open then
+		update_tab2(self)
+		imgui.end_tab_item()
 	end
 	
+	imgui.end_tab_bar()	
 	imgui.end_window()
 
-	local agents = {}
+	local agents 	= {}
+	self.survived 	= 0
 	local count, generation = biosim.SimulationStep(agents)
-	self.generation = generation
 	if(count == self.popdatacount) then 
 		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)
-		for k = 1, count-1, 6 do 
-			local x = agents[k]
-			local y = agents[k + 1]
-			local sz = agents[k + 2]
-			local r = agents[k + 3]
-			local g = agents[k + 4]
-			local b = agents[k + 5]
+		for k = 1, count-1, AGENT_DATASIZE do 
+			local x 	= agents[k]
+			local y 	= agents[k + 1]
+			local sz 	= agents[k + 2]
+			local r 	= agents[k + 3]
+			local g 	= agents[k + 4]
+			local b 	= agents[k + 5]
+			local age 	= agents[k + 6]
+			local alive	 = agents[k + 7]
+			local startx = agents[k + 8]
+			local starty = agents[k + 9]
 			drawpixels.filled_circle(self.buffer_info, x + 1, y + 1, sz, r, g, b, 255, false)
+
+			self.life_spans[age] = (self.life_spans[age] or 0) + 1
+			if(alive == 1) then self.survived = self.survived + 1 end 
+			-- tinsert(self.dataStore, { 
+			-- 	pos = { x = x, y = y },
+			-- 	size = sz,
+			-- 	color = { r = r, g = g, b = b },
+			-- 	age = age, 
+			-- 	alive = alive, 
+			-- 	birth_pos = { x = startx, y = starty },
+			-- })
 		end 
 		resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
 	end
-
-	imgui.set_next_window_pos( 340, 5 )
-	imgui.set_next_window_size(615, 630)
+	print(self.survived)
+	if(self.generation ~= generation) then tinsert(self.survival_hist, self.survived) end 
+	self.generation = generation
+		
+	imgui.set_next_window_pos( 340 * WINDOW_SCALE, 5 )
+	imgui.set_next_window_size(615 * WINDOW_SCALE, 630 * WINDOW_SCALE)
 
 	local flags = imgui.WINDOWFLAGS_NOMOVE
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
@@ -184,6 +266,8 @@ function update(self, dt)
 	imgui.begin_window("Generation "..self.generation, true, flags)
 	local img_data = buffer.get_bytes(self.buffer_info.buffer, hash("rgba"))
 	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data, 1 )
-	imgui.image_add(img, 595, 595)
+	imgui.image_add(img, 595 * WINDOW_SCALE, 595 * WINDOW_SCALE)
 	imgui.end_window()
 end
+
+--------------------------------------------------------------------------------

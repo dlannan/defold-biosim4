@@ -72,12 +72,6 @@ static int SimulationStep(lua_State* L)
                 if (color[2] > maxColorVal) color[2] %= maxColorVal;
             }
 
-        // image.draw_circle(
-        //         data.indivLocs[i].x * p.displayScale,
-        //         ((p.sizeY - data.indivLocs[i].y) - 1) * p.displayScale,
-        //         p.agentSize,
-        //         color,  // rgb
-        //         1.0);  // alpha
         lua_pushnumber(L, data.indivLocs[i].x * BS::p.displayScale);
         lua_rawseti(L, 1, idx++); 
         lua_pushnumber(L, ((BS::p.sizeY - data.indivLocs[i].y) - 1) * BS::p.displayScale); 
@@ -89,6 +83,16 @@ static int SimulationStep(lua_State* L)
         lua_pushnumber(L, color[1]);  
         lua_rawseti(L, 1, idx++); 
         lua_pushnumber(L, color[2]);  
+        lua_rawseti(L, 1, idx++); 
+
+        const BS::Indiv &indiv = BS::peeps[i];
+        lua_pushnumber(L, indiv.age);  
+        lua_rawseti(L, 1, idx++); 
+        lua_pushnumber(L, indiv.alive?1:0);  
+        lua_rawseti(L, 1, idx++); 
+        lua_pushnumber(L, indiv.birthLoc.x * BS::p.displayScale);
+        lua_rawseti(L, 1, idx++); 
+        lua_pushnumber(L, ((BS::p.sizeY - indiv.birthLoc.y) - 1) * BS::p.displayScale); 
         lua_rawseti(L, 1, idx++); 
     }
 
