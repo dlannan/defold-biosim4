@@ -14,40 +14,11 @@
 #include "simulator.h"
 #include "genome-neurons.h"
 
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
 namespace BS {
     extern uint8_t makeGeneticColor(const Genome &genome);
-}
-
-// Internal functions 
-
-BS::listTypes SplitString( std::string s, std:string delimiter )
-{
-    BS:listTypes output;
-    size_t pos = 0;
-    std::string token;
-    while ((pos = s.find(delimiter)) != std::string::npos) {
-        token = s.substr(0, pos);
-        output.push_back( token );
-        s.erase(0, pos + delimiter.length());
-    }
-    return output;
-}
-
-// Convert biosim text format to nodes format.
-BS::lineTypes ConvertToNodesoup(BS::lineTypes &lines) 
-{
-    BS::lineTypes output;
-    BS::lineTypes::iterator li = lines.begin();
-    for( ; li != lines.end(); ++li ) {
-        std::string line = *li;
-        BS::listTypes params = SplitString(line);
-        std::string newline;
-        newline = params[0];
-        newline += " -- ";
-        newline += params[1];
-        output.push_back(newline);
-    }
-    return output;
 }
 
 static int SimulationStart(lua_State* L)
@@ -155,29 +126,32 @@ static int SimulationStep(lua_State* L)
 //   Get a list of points and lines with weights. This is passed to drawpixels for circles and lines
 static int GetAgent(lua_State* L)
 {
-    uint8_t color[3];
-
     DM_LUA_STACK_CHECK(L,0);
     int coordx = luaL_checknumber(L, 1);
     int coordy = luaL_checknumber(L, 2);
     luaL_checktype(L, 3, LUA_TTABLE);
 
     // Convert coords back to local corrds for indiv
-    BS:Coord     loc;
+    BS::Coord     loc;
     loc.x = coordx / BS::p.displayScale;
-    loc.y = -(coordy / BS::p.displayScale) + 1 - BS::p.sizeY); 
+    loc.y = -((coordy / BS::p.displayScale) + 1 - BS::p.sizeY); 
 
-    if(BS::grid::isOccupiedAt(loc)) {
+    loc.x = min(loc.x, BS::grid.sizeX() - 1);
+    loc.y = min(loc.y, BS::grid.sizeY() - 1);
+    loc.x = max(loc.x, 0);
+    loc.y = max(loc.y, 0);
+
+    if(BS::grid.isOccupiedAt(loc)) {
+        
         BS::Indiv &indiv = BS::peeps.getIndiv( loc );
-        BS::lineTypes   lines;
-        indiv.getIGraphEdgeList(lines);
+        BS::lineType   lines;
+        indiv.getIGraphEdgeList(&lines);
 
         // Should have a bunch of lines of text that are in biosim format
-        // Convert to use nodesoup format. 
-        BS::lineTypes newlines = ConvertToNodesoup(lines);
-        BS::lineTypes::itr = newlines.begin();
-        for(; itr == newlines.end(); ++itr) {
-            std::cout << *itr << std::endl;
+        BS::lineType::iterator itr = lines.begin();
+        printf("%d   %d    %d\n", loc.x, loc.y, (int)lines.size());
+        for(int i = 0; i < lines.size(); ++i) {
+            printf("NERUAL: %s\n", lines[i].c_str());
         }
     }
     

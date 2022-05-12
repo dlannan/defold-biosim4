@@ -34,7 +34,7 @@ struct Indiv {
     void printIGraphEdgeList() const;
     void printGenome() const;
 
-    void getIGraphEdgeList(lineTypes & lines);
+    void getIGraphEdgeList(lineType * lines);
 };
 
 } // end namespace BS

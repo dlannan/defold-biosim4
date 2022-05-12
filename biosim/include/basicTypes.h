@@ -1,6 +1,9 @@
 #ifndef BASICTYPES_H_INCLUDED
 #define BASICTYPES_H_INCLUDED
 
+#include <vector>
+#include <string>
+
 /*
 Basic types used throughout the project:
 
@@ -129,7 +132,7 @@ public:
 };
 
 
-typedef std::vector<std::string>    lineTypes;
+typedef std::vector<std::string>    lineType;
 
 } // end namespace BS
 

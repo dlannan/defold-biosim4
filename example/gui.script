@@ -105,6 +105,7 @@ function init(self)
 	imgui.set_ini_filename()
 	set_style()
 
+	self.mouse = { x = 0, y = 0 }
 	self.values_line = {}
 	self.values_hist = {}
 
@@ -287,16 +288,29 @@ function update(self, dt)
 	imgui.begin_window("Generation "..self.generation, true, flags)
 	local img_data = buffer.get_bytes(self.buffer_info.buffer, hash("rgba"))
 	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data )
-	imgui.image_add(img, 595 * WINDOW_SCALE, 596 * WINDOW_SCALE)
+	imgui.image_add(img, 596 * WINDOW_SCALE, 596 * WINDOW_SCALE)
+
+	local clicked = imgui.is_item_clicked(0)
+	if(clicked == true) then 
+		-- Get mouse click then mouse position. 
+		local points = {}
+		local xscale = 512 / (596 * WINDOW_SCALE)
+		local posx = (self.mouse.x - 350 * WINDOW_SCALE) * xscale
+		local yscale = 512 / (596 * WINDOW_SCALE)
+		local posy = 512 - (self.mouse.y - 16 * WINDOW_SCALE) * yscale
+		biosim.GetAgent( posx, posy, points )
+	end
+
 	imgui.end_window()
 end
 
 --------------------------------------------------------------------------------
 
-function on_input( )
 
-	local points = {}
-	GetAgent( posx, posy, points )
+function on_input(self, action_id, action)
+	
+	self.mouse.x = action.x 
+	self.mouse.y = action.y
 end
 
 --------------------------------------------------------------------------------
