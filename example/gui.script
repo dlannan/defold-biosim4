@@ -286,7 +286,7 @@ function update(self, dt)
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
 	imgui.begin_window("Generation "..self.generation, true, flags)
 	local img_data = buffer.get_bytes(self.buffer_info.buffer, hash("rgba"))
-	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data, 1 )
+	local img = imgui.image_load_rawdata( "image1", self.buffer_info.width, self.buffer_info.height, img_data )
 	imgui.image_add(img, 595 * WINDOW_SCALE, 596 * WINDOW_SCALE)
 	imgui.end_window()
 end
