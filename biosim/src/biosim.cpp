@@ -20,12 +20,35 @@ namespace BS {
 
 // Internal functions 
 
-// Convert biosim text format to nodes format.
-void ConvertToNodesoup(BS::lineTypes &lines) 
+BS::listTypes SplitString( std::string s, std:string delimiter )
 {
-
+    BS:listTypes output;
+    size_t pos = 0;
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        output.push_back( token );
+        s.erase(0, pos + delimiter.length());
+    }
+    return output;
 }
 
+// Convert biosim text format to nodes format.
+BS::lineTypes ConvertToNodesoup(BS::lineTypes &lines) 
+{
+    BS::lineTypes output;
+    BS::lineTypes::iterator li = lines.begin();
+    for( ; li != lines.end(); ++li ) {
+        std::string line = *li;
+        BS::listTypes params = SplitString(line);
+        std::string newline;
+        newline = params[0];
+        newline += " -- ";
+        newline += params[1];
+        output.push_back(newline);
+    }
+    return output;
+}
 
 static int SimulationStart(lua_State* L)
 {
@@ -130,7 +153,7 @@ static int SimulationStep(lua_State* L)
 }
 
 //   Get a list of points and lines with weights. This is passed to drawpixels for circles and lines
-static int SimulationStep(lua_State* L)
+static int GetAgent(lua_State* L)
 {
     uint8_t color[3];
 
@@ -151,7 +174,11 @@ static int SimulationStep(lua_State* L)
 
         // Should have a bunch of lines of text that are in biosim format
         // Convert to use nodesoup format. 
-        ConvertToNodesoup(lines);
+        BS::lineTypes newlines = ConvertToNodesoup(lines);
+        BS::lineTypes::itr = newlines.begin();
+        for(; itr == newlines.end(); ++itr) {
+            std::cout << *itr << std::endl;
+        }
     }
     
     return 0;
@@ -163,6 +190,7 @@ static const luaL_reg Module_methods[] =
     {"SimulationStep", SimulationStep},
     {"SimulationStart", SimulationStart},
     {"SimulationMode", SimulationMode },
+    {"GetAgent", GetAgent },
     {0, 0}
 };
 
