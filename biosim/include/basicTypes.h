@@ -128,6 +128,9 @@ public:
     Dir dir;
 };
 
+
+typedef std::vector<std::string>    lineTypes;
+
 } // end namespace BS
 
 #endif // BASICTYPES_H_INCLUDED

@@ -251,6 +251,38 @@ void Indiv::printIGraphEdgeList() const
     }
 }
 
+// This prints a neural net in a form that can be processed with
+// graph-nnet.py to produce a graphic illustration of the net.
+void  Indiv::getIGraphEdgeList(lineTypes & lines) 
+{
+    for (auto & conn : nnet.connections) {
+
+        std::string     line;
+        if (conn.sourceType == SENSOR) {
+            line += sensorShortName((Sensor)(conn.sourceNum);
+        } else {
+            line += "N";
+            line += std::to_string(conn.sourceNum);
+        }
+
+        std::cout << " ";
+
+        if (conn.sinkType == ACTION) {
+            line + actionShortName((Action)(conn.sinkNum);
+        } else {
+            line += "N";
+            line += std::to_string(conn.sinkNum);
+        }
+
+        line += " ";
+        line += std::to_string(conn.weight);
+        line += std::endl;
+
+        lines.push_back(line);
+    }
+    return lines();
+}
+
 
 float averageGenomeLength()
 {

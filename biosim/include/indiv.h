@@ -15,16 +15,16 @@ namespace BS {
 
 struct Indiv {
     bool alive;
-    uint16_t index; // index into peeps[] container
-    Coord loc;   // refers to a location in grid[][]
+    uint16_t index;         // index into peeps[] container
+    Coord loc;              // refers to a location in grid[][]
     Coord birthLoc;
-    unsigned age;       // Age isnt age - its a timer?
+    unsigned age;           // Age isnt age - its a timer?
     Genome genome;
-    NeuralNet nnet;   // derived from .genome
-    float responsiveness;  // 0.0..1.0 (0 is like asleep)
-    unsigned oscPeriod; // 2..4*p.stepsPerGeneration (TBD, see executeActions())
+    NeuralNet nnet;         // derived from .genome
+    float responsiveness;   // 0.0..1.0 (0 is like asleep)
+    unsigned oscPeriod;     // 2..4*p.stepsPerGeneration (TBD, see executeActions())
     unsigned longProbeDist; // distance for long forward probe for obstructions
-    Dir lastMoveDir;  // direction of last movement
+    Dir lastMoveDir;        // direction of last movement
     unsigned challengeBits; // modified when the indiv accomplishes some task
     std::array<float, Action::NUM_ACTIONS> feedForward(unsigned simStep); // reads sensors, returns actions
     float getSensor(Sensor, unsigned simStep) const;
@@ -33,6 +33,8 @@ struct Indiv {
     void printNeuralNet() const;
     void printIGraphEdgeList() const;
     void printGenome() const;
+
+    void getIGraphEdgeList(lineTypes & lines);
 };
 
 } // end namespace BS

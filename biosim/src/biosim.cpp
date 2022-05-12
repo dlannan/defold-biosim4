@@ -18,6 +18,15 @@ namespace BS {
     extern uint8_t makeGeneticColor(const Genome &genome);
 }
 
+// Internal functions 
+
+// Convert biosim text format to nodes format.
+void ConvertToNodesoup(BS::lineTypes &lines) 
+{
+
+}
+
+
 static int SimulationStart(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -118,6 +127,34 @@ static int SimulationStep(lua_State* L)
   
     lua_pushnumber(L, idx);
     return 1;
+}
+
+//   Get a list of points and lines with weights. This is passed to drawpixels for circles and lines
+static int SimulationStep(lua_State* L)
+{
+    uint8_t color[3];
+
+    DM_LUA_STACK_CHECK(L,0);
+    int coordx = luaL_checknumber(L, 1);
+    int coordy = luaL_checknumber(L, 2);
+    luaL_checktype(L, 3, LUA_TTABLE);
+
+    // Convert coords back to local corrds for indiv
+    BS:Coord     loc;
+    loc.x = coordx / BS::p.displayScale;
+    loc.y = -(coordy / BS::p.displayScale) + 1 - BS::p.sizeY); 
+
+    if(BS::grid::isOccupiedAt(loc)) {
+        BS::Indiv &indiv = BS::peeps.getIndiv( loc );
+        BS::lineTypes   lines;
+        indiv.getIGraphEdgeList(lines);
+
+        // Should have a bunch of lines of text that are in biosim format
+        // Convert to use nodesoup format. 
+        ConvertToNodesoup(lines);
+    }
+    
+    return 0;
 }
 
 // Functions exposed to Lua
