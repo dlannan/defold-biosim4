@@ -2,7 +2,7 @@ local tinsert = table.insert
 
 local inifile = require('utils.inifile')
 
-local WINDOW_SCALE 		= 1.0
+local WINDOW_SCALE 		= 1.5
 local AGENT_DATASIZE 	= 10
 --------------------------------------------------------------------------------
 
@@ -139,6 +139,13 @@ end
 --------------------------------------------------------------------------------
 
 local function update_tab1(self)
+
+	local flags = imgui.WINDOWFLAGS_NOMOVE
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_HORIZONTALSCROLLBAR )
+	imgui.begin_child("", 0, 0, false, flags)
+
 	for k,v in pairs(self.iniTable.biosim) do 
 		-- print(k, v, type(v))
 		if(type(v.value) == "number") then 
@@ -154,6 +161,8 @@ local function update_tab1(self)
 			if changed then	self.iniTable.biosim[k].value = checked	end
 		end
 	end
+
+	imgui.end_child()
 end
 
 --------------------------------------------------------------------------------
@@ -191,6 +200,13 @@ end
 --------------------------------------------------------------------------------
 
 local function update_tab3(self)
+
+	local flags = imgui.WINDOWFLAGS_NOMOVE
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_HORIZONTALSCROLLBAR )
+	imgui.begin_child("", 0, 0, false, flags)
+
 	local a = self.agent
 	local col = { r = a.r * 0.00390625, g = a.g * 0.00390625, b = a.b * 0.00390625 }
 	imgui.text_colored(" Agent No: "..tostring(a.id), col.r, col.g, col.b, 1 )
@@ -209,7 +225,7 @@ local function update_tab3(self)
 	if(a.nodes) then 
 		for i = 1, #a.nodes, 2 do 
 			local x, y  = a.nodes[i] + 256, a.nodes[i+1] + 256
-			drawpixels.filled_circle(self.buffer_agent, x, y, 30, 84, 84, 84, 255, false)
+			drawpixels.filled_circle(self.buffer_agent, x, y, 25, 84, 84, 84, 255, false)
 		end 
 	end 
 
@@ -220,10 +236,12 @@ local function update_tab3(self)
 		local tscale = ( 312 * WINDOW_SCALE )/ 512
 		for i = 1, #a.nodes, 2 do 
 			local x, y  = a.nodes[i] + 256, a.nodes[i+1] + 256
-			imgui.set_cursor_pos(x + 2 * WINDOW_SCALE, y + 141 * WINDOW_SCALE)
+			imgui.set_cursor_pos((x - 5) * WINDOW_SCALE, (y + 5) * WINDOW_SCALE)
 			imgui.text_colored(a.names[math.floor(i/2)], 1, 1, 0, 1 )
 		end 
 	end 
+
+	imgui.end_child()
 end
 
 --------------------------------------------------------------------------------
@@ -236,7 +254,6 @@ function update(self, dt)
 	local flags = imgui.WINDOWFLAGS_NOMOVE
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
-	flags = bit.bor( flags, imgui.WINDOWFLAGS_HORIZONTALSCROLLBAR )
 	imgui.begin_window("Defold BioSim4", true, flags)
 
 	imgui.text("Thanks to David Miller for BioSim4.")
@@ -352,10 +369,11 @@ function update(self, dt)
 		local names = {}
 		local joins = {}
 		self.agent = { id = 0, r = 255, b = 255, g = 255 }
-		local xscale = 512 / (596 * WINDOW_SCALE)
+		local xscale = 513 / (596 * WINDOW_SCALE)
 		local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
 		local yscale = 512 / (596 * WINDOW_SCALE)
-		local posy = 512 - (self.mouse.y - 15 * WINDOW_SCALE) * yscale
+		local posy = 512 - (self.mouse.y * yscale - 20)
+		print(posy, self.mouse.y, yscale)
 		biosim.GetAgent( posx, posy, points, names, self.agent, joins, 300, 80.0 )
 		--pprint(joins)
 		drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
