@@ -19,7 +19,7 @@ float getPopulationDensityAlongAxis(Coord loc, Dir dir)
     // midrange if the population density is greatest in the reverse direction,
     // above midrange if density is greatest in forward direction.
 
-    assert(dir != Compass::CENTER);  // require a defined axis
+    assert(dir != Compass_CENTER);  // require a defined axis
 
     double sum = 0.0;
     Coord dirVec = dir.asNormalizedCoord();
@@ -117,7 +117,7 @@ float getSignalDensityAlongAxis(unsigned layerNum, Coord loc, Dir dir)
     // so signal densities along borders and in corners are commonly sparser than
     // away from borders.
 
-    assert(dir != Compass::CENTER); // require a defined axis
+    assert(dir != Compass_CENTER); // require a defined axis
 
     double sum = 0.0;
     Coord dirVec = dir.asNormalizedCoord();

@@ -27,7 +27,7 @@ struct ImageFrameData {
     std::vector<SignalLayer> signalLayers; // [layer][x][y]
 };
 
-void saveFrameThread(void * _ctx); // runs in a thread
+static void saveFrameThread(void * _ctx); // runs in a thread
 
 struct ImageWriter {
     ImageWriter();

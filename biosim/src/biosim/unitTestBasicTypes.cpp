@@ -23,117 +23,117 @@ bool unitTestBasicTypes()
     // ctor from Compass
     // .asInt()
     // copy assignment
-    Dir d1 = Dir(Compass::N);
-    Dir d2 = Dir(Compass::CENTER);
+    Dir d1 = Dir(Compass_N);
+    Dir d2 = Dir(Compass_CENTER);
     d1 = d2;
-    assert(d1.asInt() == (int)Compass::CENTER);
-    d1 = Dir(Compass::SW);
+    assert(d1.asInt() == (int)Compass_CENTER);
+    d1 = Dir(Compass_SW);
     assert(d1.asInt() == 0);
-    d1 = Dir(Compass::S);
+    d1 = Dir(Compass_S);
     assert(d1.asInt() == 1);
-    d1 = Dir(Compass::SE);
+    d1 = Dir(Compass_SE);
     assert(d1.asInt() == 2);
-    d1 = Dir(Compass::W);
+    d1 = Dir(Compass_W);
     assert(d1.asInt() == 3);
-    d1 = Dir(Compass::CENTER);
+    d1 = Dir(Compass_CENTER);
     assert(d1.asInt() == 4);
-    d1 = Dir(Compass::E);
+    d1 = Dir(Compass_E);
     assert(d1.asInt() == 5);
-    d1 = Dir(Compass::NW);
+    d1 = Dir(Compass_NW);
     assert(d1.asInt() == 6);
-    d1 = Dir(Compass::N);
+    d1 = Dir(Compass_N);
     assert(d1.asInt() == 7);
-    d1 = Dir(Compass::NE);
+    d1 = Dir(Compass_NE);
     assert(d1.asInt() == 8);
 
-    assert(Dir(Compass::SW).asInt() == 0);
-    assert(Dir(Compass::S).asInt()  == 1);
-    assert(Dir(Compass::SE).asInt() == 2);
-    assert(Dir(Compass::W).asInt()  == 3);
-    assert(Dir(Compass::CENTER).asInt() == 4);
-    assert(Dir(Compass::E).asInt()  == 5);
-    assert(Dir(Compass::NW).asInt() == 6);
-    assert(Dir(Compass::N).asInt()  == 7);
-    assert(Dir(Compass::NE).asInt() == 8);
-    assert(Dir((Compass)8).asInt() == 8);
-    assert(Dir((Compass)((Dir((Compass)8)).asInt())).asInt() == 8);
-    assert(Dir((Compass)(Dir(Compass::NE).asInt())).asInt() == 8);
-    d2 = Compass::E;
+    assert(Dir(Compass_SW).asInt() == 0);
+    assert(Dir(Compass_S).asInt()  == 1);
+    assert(Dir(Compass_SE).asInt() == 2);
+    assert(Dir(Compass_W).asInt()  == 3);
+    assert(Dir(Compass_CENTER).asInt() == 4);
+    assert(Dir(Compass_E).asInt()  == 5);
+    assert(Dir(Compass_NW).asInt() == 6);
+    assert(Dir(Compass_N).asInt()  == 7);
+    assert(Dir(Compass_NE).asInt() == 8);
+    assert(Dir((uint8_t)8).asInt() == 8);
+    assert(Dir((uint8_t)((Dir((uint8_t)8)).asInt())).asInt() == 8);
+    assert(Dir((uint8_t)(Dir(Compass_NE).asInt())).asInt() == 8);
+    d2 = Compass_E;
     d1 = d2;
     assert(d1.asInt() == 5);
     d2 = d1;
     assert(d1.asInt() == 5);
 
     // .operator=() from Compass
-    d1 = Compass::SW;
+    d1 = Compass_SW;
     assert(d1.asInt() == 0);
-    d1 = Compass::SE;
+    d1 = Compass_SE;
     assert(d1.asInt() == 2);
 
     // [in]equality with Compass
-    d1 = Compass::CENTER;
-    assert(d1 == Compass::CENTER);
-    d1 = Compass::SE;
-    assert(d1 == Compass::SE);
-    assert(Dir(Compass::W) == Compass::W);
-    assert(Dir(Compass::W) != Compass::NW);
+    d1 = Compass_CENTER;
+    assert(d1 == Compass_CENTER);
+    d1 = Compass_SE;
+    assert(d1 == Compass_SE);
+    assert(Dir(Compass_W) == Compass_W);
+    assert(Dir(Compass_W) != Compass_NW);
 
     // [in]equality with Dir
-    d1 = Compass::N;
-    d2 = Compass::N;
+    d1 = Compass_N;
+    d2 = Compass_N;
     assert(d1 == d2);
     assert(d2 == d1);
-    d1 = Compass::NE;
+    d1 = Compass_NE;
     assert(d1 != d2);
     assert(d2 != d1);
 
     // .rotate()
-    assert(d1.rotate(1) == Compass::E);
-    assert(d1.rotate(2) == Compass::SE);
-    assert(d1.rotate(-1) == Compass::N);
-    assert(d1.rotate(-2) == Compass::NW);
-    assert(Dir(Compass::N).rotate(1) == d1);
-    assert(Dir(Compass::SW).rotate(-2) == Compass::SE);
+    assert(d1.rotate(1) == Compass_E);
+    assert(d1.rotate(2) == Compass_SE);
+    assert(d1.rotate(-1) == Compass_N);
+    assert(d1.rotate(-2) == Compass_NW);
+    assert(Dir(Compass_N).rotate(1) == d1);
+    assert(Dir(Compass_SW).rotate(-2) == Compass_SE);
 
     // .asNormalizedCoord()
-    Coord c1 = Dir(Compass::CENTER).asNormalizedCoord();
+    Coord c1 = Dir(Compass_CENTER).asNormalizedCoord();
     assert(c1.x == 0 && c1.y == 0);
-    d1 = Compass::SW;
+    d1 = Compass_SW;
     c1 = d1.asNormalizedCoord();
     assert(c1.x == -1 && c1.y == -1);
-    c1 = Dir(Compass::S).asNormalizedCoord();
+    c1 = Dir(Compass_S).asNormalizedCoord();
     assert(c1.x == 0 && c1.y == -1);
-    c1 = Dir(Compass::SE).asNormalizedCoord();
+    c1 = Dir(Compass_SE).asNormalizedCoord();
     assert(c1.x == 1 && c1.y == -1);
-    c1 = Dir(Compass::W).asNormalizedCoord();
+    c1 = Dir(Compass_W).asNormalizedCoord();
     assert(c1.x == -1 && c1.y == 0);
-    c1 = Dir(Compass::E).asNormalizedCoord();
+    c1 = Dir(Compass_E).asNormalizedCoord();
     assert(c1.x == 1 && c1.y == 0);
-    c1 = Dir(Compass::NW).asNormalizedCoord();
+    c1 = Dir(Compass_NW).asNormalizedCoord();
     assert(c1.x == -1 && c1.y == 1);
-    c1 = Dir(Compass::N).asNormalizedCoord();
+    c1 = Dir(Compass_N).asNormalizedCoord();
     assert(c1.x == 0 && c1.y == 1);
-    c1 = Dir(Compass::NE).asNormalizedCoord();
+    c1 = Dir(Compass_NE).asNormalizedCoord();
     assert(c1.x == 1 && c1.y == 1);
 
     // .asNormalizedPolar()
-    d1 = Compass::SW;
+    d1 = Compass_SW;
     Polar p1 = d1.asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::SW);
-    p1 = Dir(Compass::S).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::S);
-    p1 = Dir(Compass::SE).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::SE);
-    p1 = Dir(Compass::W).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::W);
-    p1 = Dir(Compass::E).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::E);
-    p1 = Dir(Compass::NW).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::NW);
-    p1 = Dir(Compass::N).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::N);
-    p1 = Dir(Compass::NE).asNormalizedPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::NE);
+    assert(p1.mag == 1 && p1.dir == Compass_SW);
+    p1 = Dir(Compass_S).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_S);
+    p1 = Dir(Compass_SE).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_SE);
+    p1 = Dir(Compass_W).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_W);
+    p1 = Dir(Compass_E).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_E);
+    p1 = Dir(Compass_NW).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_NW);
+    p1 = Dir(Compass_N).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_N);
+    p1 = Dir(Compass_NE).asNormalizedPolar();
+    assert(p1.mag == 1 && p1.dir == Compass_NE);
 
     // Coord
     // ctor from int16_t,int16_t
@@ -167,37 +167,37 @@ bool unitTestBasicTypes()
     c1 = Coord(0, 0);
     c2 = c1.normalize();
     assert(c2.x == 0 && c2.y == 0);
-    assert(c2.asDir() == Compass::CENTER);
+    assert(c2.asDir() == Compass_CENTER);
     c1 = Coord(0, 1).normalize();
     assert(c1.x == 0 && c1.y == 1);
-    assert(c1.asDir() == Compass::N);
+    assert(c1.asDir() == Compass_N);
     c1 = Coord(-1, 1).normalize();
     assert(c1.x == -1 && c1.y == 1);
-    assert(c1.asDir() == Compass::NW);
+    assert(c1.asDir() == Compass_NW);
     c1 = Coord(100, 5).normalize();
     assert(c1.x == 1 && c1.y == 0);
-    assert(c1.asDir() == Compass::E);
+    assert(c1.asDir() == Compass_E);
     c1 = Coord(100, 105).normalize();
     assert(c1.x == 1 && c1.y == 1);
-    assert(c1.asDir() == Compass::NE);
+    assert(c1.asDir() == Compass_NE);
     c1 = Coord(-5, 101).normalize();
     assert(c1.x == 0 && c1.y == 1);
-    assert(c1.asDir() == Compass::N);
+    assert(c1.asDir() == Compass_N);
     c1 = Coord(-500, 10).normalize();
     assert(c1.x == -1 && c1.y == 0);
-    assert(c1.asDir() == Compass::W);
+    assert(c1.asDir() == Compass_W);
     c1 = Coord(-500, -490).normalize();
     assert(c1.x == -1 && c1.y == -1);
-    assert(c1.asDir() == Compass::SW);
+    assert(c1.asDir() == Compass_SW);
     c1 = Coord(-1, -490).normalize();
     assert(c1.x == 0 && c1.y == -1);
-    assert(c1.asDir() == Compass::S);
+    assert(c1.asDir() == Compass_S);
     c1 = Coord(1101, -1090).normalize();
     assert(c1.x == 1 && c1.y == -1);
-    assert(c1.asDir() == Compass::SE);
+    assert(c1.asDir() == Compass_SE);
     c1 = Coord(1101, -3).normalize();
     assert(c1.x == 1 && c1.y == 0);
-    assert(c1.asDir() == Compass::E);
+    assert(c1.asDir() == Compass_E);
 
     // .length()
     assert(Coord(0, 0).length() == 0);
@@ -211,13 +211,13 @@ bool unitTestBasicTypes()
 
     // .asPolar()
     p1 = Coord(0, 0).asPolar();
-    assert(p1.mag == 0 && p1.dir == Compass::CENTER);
+    assert(p1.mag == 0 && p1.dir == Compass_CENTER);
     p1 = Coord(0, 1).asPolar();
-    assert(p1.mag == 1 && p1.dir == Compass::N);
+    assert(p1.mag == 1 && p1.dir == Compass_N);
     p1 = Coord(-10, -10).asPolar();
-    assert(p1.mag == 14 && p1.dir == Compass::SW); // round down mag
+    assert(p1.mag == 14 && p1.dir == Compass_SW); // round down mag
     p1 = Coord(100, 1).asPolar();
-    assert(p1.mag == 100 && p1.dir == Compass::E); // round down mag
+    assert(p1.mag == 100 && p1.dir == Compass_E); // round down mag
 
     // operator+(Coord), operator-(Coord)
     c1 = Coord(0, 0) + Coord(6, 8);
@@ -237,28 +237,28 @@ bool unitTestBasicTypes()
 
     // operator+(Dir), operator-(Dir)
     c1 = Coord(0, 0);
-    c2 = c1 + Dir(Compass::CENTER);
+    c2 = c1 + Dir(Compass_CENTER);
     assert(c2.x == 0 && c2.y == 0);
-    c2 = c1 + Dir(Compass::E);
+    c2 = c1 + Dir(Compass_E);
     assert(c2.x == 1 && c2.y == 0);
-    c2 = c1 + Dir(Compass::W);
+    c2 = c1 + Dir(Compass_W);
     assert(c2.x == -1 && c2.y == 0);
-    c2 = c1 + Dir(Compass::SW);
+    c2 = c1 + Dir(Compass_SW);
     assert(c2.x == -1 && c2.y == -1);
 
-    c2 = c1 - Dir(Compass::CENTER);
+    c2 = c1 - Dir(Compass_CENTER);
     assert(c2.x == 0 && c2.y == 0);
-    c2 = c1 - Dir(Compass::E);
+    c2 = c1 - Dir(Compass_E);
     assert(c2.x == -1 && c2.y == 0);
-    c2 = c1 - Dir(Compass::W);
+    c2 = c1 - Dir(Compass_W);
     assert(c2.x == 1 && c2.y == 0);
-    c2 = c1 - Dir(Compass::SW);
+    c2 = c1 - Dir(Compass_SW);
     assert(c2.x == 1 && c2.y == 1);
 
     // raySameness()
     c1 = Coord { 0, 0 };
     c2 = Coord { 10, 11 };
-    d1 = Compass::CENTER;
+    d1 = Compass_CENTER;
     assert(c1.raySameness(c2) == 1.0); // special case - zero vector
     assert(c2.raySameness(c1) == 1.0); // special case - zero vector
     assert(c2.raySameness(d1) == 1.0); // special case - zero vector
@@ -278,32 +278,32 @@ bool unitTestBasicTypes()
     // Polar
     // ctor from mag, dir
     p1 = Polar();
-    assert(p1.mag == 0 && p1.dir == Compass::CENTER);
-    p1 = Polar(0, Compass::S);
-    assert(p1.mag == 0 && p1.dir == Compass::S);
-    p1 = Polar(10, Compass::SE);
-    assert(p1.mag == 10 && p1.dir == Compass::SE);
-    p1 = Polar(-10, Compass::NW);
-    assert(p1.mag == -10 && p1.dir == Compass::NW);
+    assert(p1.mag == 0 && p1.dir == Compass_CENTER);
+    p1 = Polar(0, Compass_S);
+    assert(p1.mag == 0 && p1.dir == Compass_S);
+    p1 = Polar(10, Compass_SE);
+    assert(p1.mag == 10 && p1.dir == Compass_SE);
+    p1 = Polar(-10, Compass_NW);
+    assert(p1.mag == -10 && p1.dir == Compass_NW);
 
     // .asCoord()
-    c1 = Polar(0, Compass::CENTER).asCoord();
+    c1 = Polar(0, Compass_CENTER).asCoord();
     assert(c1.x == 0 && c1.y == 0);
-    c1 = Polar(10, Compass::CENTER).asCoord();
+    c1 = Polar(10, Compass_CENTER).asCoord();
     assert(c1.x == 0 && c1.y == 0);
-    c1 = Polar(20, Compass::N).asCoord();
+    c1 = Polar(20, Compass_N).asCoord();
     assert(c1.x == 0 && c1.y == 20);
-    //c1 = Polar(12, Compass::W).asCoord();
-    p1 = Polar(12, Compass::W);
+    //c1 = Polar(12, Compass_W).asCoord();
+    p1 = Polar(12, Compass_W);
     c1 = p1.asCoord();
     assert(c1.x == -12 && c1.y == 0);
-    c1 = Polar(14, Compass::NE).asCoord();
+    c1 = Polar(14, Compass_NE).asCoord();
     assert(c1.x == 10 && c1.y == 10);
-    c1 = Polar(-14, Compass::NE).asCoord();
+    c1 = Polar(-14, Compass_NE).asCoord();
     assert(c1.x == -10 && c1.y == -10);
-    c1 = Polar(14, Compass::E).asCoord();
+    c1 = Polar(14, Compass_E).asCoord();
     assert(c1.x == 14 && c1.y == 0);
-    c1 = Polar(-14, Compass::E).asCoord();
+    c1 = Polar(-14, Compass_E).asCoord();
     assert(c1.x == -14 && c1.y == 0);
 
     return true;

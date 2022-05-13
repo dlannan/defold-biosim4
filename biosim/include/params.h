@@ -80,7 +80,7 @@ public:
 private:
     Params privParams;
     std::string configFilename;
-    time_t lastModTime; // when config file was last read
+    int lastModTime; // when config file was last read
     void ingestParameter(std::string name, std::string val);
 };
 

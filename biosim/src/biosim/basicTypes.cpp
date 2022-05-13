@@ -9,11 +9,11 @@ namespace BS {
 // eight steps per full rotation. Positive values are clockwise; negative
 // values are counterclockwise. E.g., rotate(4) returns a direction 90
 // degrees to the right.
-constexpr Compass NW = BS::Compass::NW; constexpr Compass N = BS::Compass::N;
-constexpr Compass NE = BS::Compass::NE; constexpr Compass E = BS::Compass::E;
-constexpr Compass SE = BS::Compass::SE; constexpr Compass S = BS::Compass::S;
-constexpr Compass SW = BS::Compass::SW; constexpr Compass W = BS::Compass::W;
-constexpr Compass C = BS::Compass::CENTER;
+const uint8_t NW = BS::Compass_NW; const uint8_t N = BS::Compass_N;
+const uint8_t NE = BS::Compass_NE; const uint8_t E = BS::Compass_E;
+const uint8_t SE = BS::Compass_SE; const uint8_t S = BS::Compass_S;
+const uint8_t SW = BS::Compass_SW; const uint8_t W = BS::Compass_W;
+const uint8_t C = BS::Compass_CENTER;
 
 const Dir rotations[72] = { SW, W, NW, N, NE, E, SE, S,
                             S, SW, W, NW, N, NE, E, SE,

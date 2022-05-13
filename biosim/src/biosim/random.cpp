@@ -16,7 +16,6 @@
 #include <chrono>
 #include <climits>
 #include "simulator.h"
-#include "omp.h"
 
 
 namespace BS {
@@ -35,10 +34,10 @@ void RandomUintGenerator::initialize()
         // event that a coefficient is zero, we'll force it to an arbitrary
         // non-zero value. Each thread uses a different seed, yet
         // deterministic per-thread.
-        rngx = p.RNGSeed + 123456789 + omp_get_thread_num();
-        rngy = p.RNGSeed + 362436000 + omp_get_thread_num();
-        rngz = p.RNGSeed + 521288629 + omp_get_thread_num();
-        rngc = p.RNGSeed + 7654321 + omp_get_thread_num();
+        rngx = p.RNGSeed + 123456789;
+        rngy = p.RNGSeed + 362436000;
+        rngz = p.RNGSeed + 521288629;
+        rngc = p.RNGSeed + 7654321;
         rngx = rngx != 0 ? rngx : 123456789;
         rngy = rngy != 0 ? rngy : 123456789;
         rngz = rngz != 0 ? rngz : 123456789;
@@ -46,7 +45,7 @@ void RandomUintGenerator::initialize()
 
         // Initialize Jenkins determinstically per-thread:
         a = 0xf1ea5eed;
-        b = c = d = p.RNGSeed + omp_get_thread_num();
+        b = c = d = p.RNGSeed ;
         if (b == 0) {
             b = c = d + 123456789;
         }
@@ -59,7 +58,7 @@ void RandomUintGenerator::initialize()
         // resolution and multiple threads might be initializing their
         // instances at nearly the same time, so we'll add the thread
         // number to uniquely seed mt19937 per-thread.
-        std::mt19937 generator(time(0) + omp_get_thread_num());
+        std::mt19937 generator(time(0) );
 
         // Initialize Marsaglia, but don't let any of the values be zero:
         do { rngx = generator(); } while (rngx == 0);

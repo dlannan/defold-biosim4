@@ -61,7 +61,17 @@ namespace BS {
 
 extern bool unitTestBasicTypes();
 
-enum class Compass :uint8_t { SW = 0, S, SE, W, CENTER, E, NW, N, NE };
+enum { 
+    Compass_SW = 0, 
+    Compass_S, 
+    Compass_SE, 
+    Compass_W, 
+    Compass_CENTER, 
+    Compass_E, 
+    Compass_NW, 
+    Compass_N, 
+    Compass_NE 
+};
 
 struct Dir;
 struct Coord;
@@ -69,10 +79,10 @@ struct Polar;
 
 // Supports the eight directions in enum class Compass plus CENTER.
 struct __attribute__((packed)) Dir {
-    static Dir random8() { return Dir(Compass::N).rotate(randomUint(0, 7)); }
+    static Dir random8() { return Dir(Compass_N).rotate(randomUint(0, 7)); }
 
-    Dir(Compass dir = Compass::CENTER) : dir9{dir} {}
-    Dir& operator=(const Compass& d) { dir9 = d; return *this; }
+    Dir(uint8_t dir = Compass_CENTER) : dir9{dir} {}
+    Dir& operator=(const uint8_t& d) { dir9 = d; return *this; }
     uint8_t asInt() const { return (uint8_t)dir9; }
     Coord asNormalizedCoord() const;  // (-1, -0, 1, -1, 0, 1)
     Polar asNormalizedPolar() const;
@@ -82,12 +92,12 @@ struct __attribute__((packed)) Dir {
     Dir rotate90DegCCW() const { return rotate(-2); }
     Dir rotate180Deg() const { return rotate(4); }
 
-    bool operator==(Compass d) const { return asInt() == (uint8_t)d; }
-    bool operator!=(Compass d) const { return asInt() != (uint8_t)d; }
+    bool operator==(uint8_t d) const { return asInt() == (uint8_t)d; }
+    bool operator!=(uint8_t d) const { return asInt() != (uint8_t)d; }
     bool operator==(Dir d) const { return asInt() == d.asInt(); }
     bool operator!=(Dir d) const { return asInt() != d.asInt(); }
 private:
-    Compass dir9;
+    uint8_t dir9;
 };
 
 
@@ -121,7 +131,7 @@ public:
 // Polar magnitudes are signed 32-bit integers so that they can extend across any 2D
 // area defined by the Coord class.
 struct __attribute__((packed)) Polar {
-    explicit Polar(int mag0 = 0, Compass dir0 = Compass::CENTER)
+    explicit Polar(int mag0 = 0, uint8_t dir0 = Compass_CENTER)
          : mag{mag0}, dir{Dir{dir0}} { }
     explicit Polar(int mag0, Dir dir0)
          : mag{mag0}, dir{dir0} { }

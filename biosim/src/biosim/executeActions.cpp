@@ -6,7 +6,6 @@
 #include <array>
 #include <cassert>
 #include "simulator.h"
-#include "omp.h"
 
 namespace BS {
 
