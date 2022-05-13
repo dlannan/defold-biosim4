@@ -62,6 +62,8 @@ local function startSim(self)
 	self.survived = 0
 	self.survival_hist = {}
 	self.diversity_hist = {}
+
+	self.agent = { id = 0, r = 255, g = 255, b = 255 }
 end
 
 --------------------------------------------------------------------------------
@@ -90,17 +92,25 @@ function init(self)
 	local channels = 4
 
 	self.resource_path = go.get("/go#sprite", "texture0")
+	self.resource_agent = go.get("/agent#sprite", "texture0")
 
 	self.buffer_info = {
 		buffer = buffer.create(width * height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT8, count = channels}}),
-		width = width,
-		height = height,
-		channels = channels
+		width = width, height = height,	channels = channels
+	}
+
+	self.buffer_agent = {
+		buffer = buffer.create(width * height, {{name = hash("rgba"), type = buffer.VALUE_TYPE_UINT8, count = channels}}),
+		width = width, height = height,	channels = channels
 	}
 
 	self.header = {width = width, height = height, type = resource.TEXTURE_TYPE_2D, format = resource.TEXTURE_FORMAT_RGBA, num_mip_maps = 1}
+
 	drawpixels.fill(self.buffer_info, 255, 255, 0, 255)
 	resource.set_texture(self.resource_path, self.header, self.buffer_info.buffer)
+
+	drawpixels.fill(self.buffer_agent, 0, 255, 255, 255)
+	resource.set_texture(self.resource_agent, self.header, self.buffer_agent.buffer)
 
 	imgui.set_ini_filename()
 	set_style()
@@ -180,6 +190,44 @@ end
 
 --------------------------------------------------------------------------------
 
+local function update_tab3(self)
+	local a = self.agent
+	local col = { r = a.r * 0.00390625, g = a.g * 0.00390625, b = a.b * 0.00390625 }
+	imgui.text_colored(" Agent No: "..tostring(a.id), col.r, col.g, col.b, 1 )
+
+	if(a.joins and a.nodes) then
+		for i = 0, #a.joins - 1 do 
+			local p1 = i * 2 + 1 
+			local p2 = a.joins[i] * 2 + 1
+			local x1, y1  = a.nodes[p1] + 256, a.nodes[p1 + 1] + 256
+			local x2, y2  = a.nodes[p2] + 256, a.nodes[p2 + 1] + 256
+			-- print(x1, y1, x2, y2)
+			drawpixels.line(self.buffer_agent, x1, y1, x2, y2, 255, 255, 255, 255, false)
+		end 
+	end
+
+	if(a.nodes) then 
+		for i = 1, #a.nodes, 2 do 
+			local x, y  = a.nodes[i] + 256, a.nodes[i+1] + 256
+			drawpixels.filled_circle(self.buffer_agent, x, y, 30, 84, 84, 84, 255, false)
+		end 
+	end 
+
+	local img_data = buffer.get_bytes(self.buffer_agent.buffer, hash("rgba"))
+	local img = imgui.image_load_rawdata( "imageAgents", self.buffer_agent.width, self.buffer_agent.height, img_data )
+	imgui.image_add(img, 512 * WINDOW_SCALE, 512 * WINDOW_SCALE)
+	if(a.nodes) then 
+		local tscale = ( 312 * WINDOW_SCALE )/ 512
+		for i = 1, #a.nodes, 2 do 
+			local x, y  = a.nodes[i] + 256, a.nodes[i+1] + 256
+			imgui.set_cursor_pos(x + 2 * WINDOW_SCALE, y + 141 * WINDOW_SCALE)
+			imgui.text_colored(a.names[math.floor(i/2)], 1, 1, 0, 1 )
+		end 
+	end 
+end
+
+--------------------------------------------------------------------------------
+
 function update(self, dt)
 
 	imgui.set_next_window_pos( 5, 5 )
@@ -188,6 +236,7 @@ function update(self, dt)
 	local flags = imgui.WINDOWFLAGS_NOMOVE
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NORESIZE )
 	flags = bit.bor( flags, imgui.WINDOWFLAGS_NOCOLLAPSE )
+	flags = bit.bor( flags, imgui.WINDOWFLAGS_HORIZONTALSCROLLBAR )
 	imgui.begin_window("Defold BioSim4", true, flags)
 
 	imgui.text("Thanks to David Miller for BioSim4.")
@@ -228,6 +277,12 @@ function update(self, dt)
 		imgui.end_tab_item()
 	end
 	
+	local tab3_open = imgui.begin_tab_item("Agent")
+	if tab3_open then 
+		update_tab3(self)
+		imgui.end_tab_item()
+	end
+
 	imgui.end_tab_bar()	
 	imgui.end_window()
 
@@ -294,11 +349,19 @@ function update(self, dt)
 	if(clicked == true) then 
 		-- Get mouse click then mouse position. 
 		local points = {}
+		local names = {}
+		local joins = {}
+		self.agent = { id = 0, r = 255, b = 255, g = 255 }
 		local xscale = 512 / (596 * WINDOW_SCALE)
-		local posx = (self.mouse.x - 350 * WINDOW_SCALE) * xscale
+		local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
 		local yscale = 512 / (596 * WINDOW_SCALE)
-		local posy = 512 - (self.mouse.y - 16 * WINDOW_SCALE) * yscale
-		biosim.GetAgent( posx, posy, points )
+		local posy = 512 - (self.mouse.y - 15 * WINDOW_SCALE) * yscale
+		biosim.GetAgent( posx, posy, points, names, self.agent, joins, 300, 80.0 )
+		--pprint(joins)
+		drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
+		self.agent.nodes = points 
+		self.agent.names = names
+		self.agent.joins = joins
 	end
 
 	imgui.end_window()
