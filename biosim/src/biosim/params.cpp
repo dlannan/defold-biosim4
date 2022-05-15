@@ -69,9 +69,9 @@ void ParamManager::setDefaults()
 
 
 void ParamManager::registerConfigFile(const char *filename)
-{
-    configFilename = std::string(filename);
-}
+
+    configFilename = filename
+end
 
 
 bool checkIfUint(const std::string &s)
