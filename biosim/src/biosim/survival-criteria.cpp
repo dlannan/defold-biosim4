@@ -3,6 +3,7 @@
 #include <cassert>
 #include <utility>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

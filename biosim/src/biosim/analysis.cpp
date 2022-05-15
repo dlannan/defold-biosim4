@@ -7,6 +7,7 @@
 #include <cstring>
 #include <string>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

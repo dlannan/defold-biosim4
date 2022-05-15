@@ -7,6 +7,7 @@
 #include <numeric>
 #include <utility>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

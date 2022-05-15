@@ -53,7 +53,7 @@ struct ImageWriter {
     unsigned skippedFrames;
 };
 
-extern ImageWriter imageWriter;
+// extern ImageWriter imageWriter;
 
 } // end namespace BS
 

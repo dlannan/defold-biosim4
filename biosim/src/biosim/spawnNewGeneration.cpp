@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

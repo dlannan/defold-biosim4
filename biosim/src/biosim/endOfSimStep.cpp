@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include "simulator.h"
+#include "statics.h"
 #include "imageWriter.h"
 
 namespace BS {
@@ -85,7 +86,7 @@ void endOfSimStep(unsigned simStep, unsigned generation)
                  || generation <= p.videoSaveFirstFrames
                  || (generation >= p.parameterChangeGenerationNumber
                      && generation <= p.parameterChangeGenerationNumber + p.videoSaveFirstFrames))) {
-        if (!imageWriter.saveVideoFrameSync(simStep, generation)) {
+        if (!BS::imageWriter.saveVideoFrameSync(simStep, BS::generation)) {
             std::cout << "imageWriter busy" << std::endl;
         }
         // if (!imageWriter.saveVideoFrame(simStep, generation)) {

@@ -7,6 +7,7 @@
 #include <cassert>
 #include <string>
 #include "simulator.h"
+#include "statics.h"
 #include "random.h"
 
 namespace BS {

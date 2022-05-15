@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

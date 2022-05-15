@@ -37,14 +37,6 @@ constexpr unsigned CHALLENGE_LOCATION_SEQUENCE = 16;
 constexpr unsigned CHALLENGE_ALTRUISM = 17;
 constexpr unsigned CHALLENGE_ALTRUISM_SACRIFICE = 18;
 
-extern ParamManager paramManager; // manages simulator params from the config file plus more
-extern const Params &p; // read-only simulator config params
-extern Grid grid;  // 2D arena where the individuals live
-extern Signals signals;  // pheromone layers
-extern Peeps peeps;   // container of all the individuals
-extern unsigned generation;
-extern unsigned survivors;
-
 extern void simulator(char *argv);
 extern void simulationStep( void );
 extern void simulationDone( void );

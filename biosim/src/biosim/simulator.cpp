@@ -19,8 +19,8 @@
 #include <dmsdk/sdk.h>
 #include <dmsdk/dlib/thread.h>
 
-
 #include "simulator.h"     // the simulator data structures
+#include "statics.h"
 #include "imageWriter.h"   // this is for generating the movies
 
 namespace BS {
@@ -31,19 +31,6 @@ extern void displaySampleGenomes(unsigned count);
 extern void executeActions(Indiv &indiv, std::array<float, Action::NUM_ACTIONS> &actionLevels);
 extern void endOfSimStep(unsigned simStep, unsigned generation);
 extern void endOfGeneration(unsigned generation);
-
-static RunMode runMode = RunMode::STOP;
-static Grid grid;        // The 2D world where the creatures live
-static Signals signals;  // A 2D array of pheromones that overlay the world grid
-static Peeps peeps;      // The container of all the individuals in the population
-static ImageWriter imageWriter; // This is for generating the movies
-
-// The paramManager maintains a private copy of the parameter values, and a copy
-// is available read-only through global variable p. Although this is not
-// foolproof, you should be able to modify the config file during a simulation
-// run and modify many of the parameters. See params.cpp and params.h for more info.
-static ParamManager paramManager;
-const Params &p { paramManager.getParamRef() }; // read-only params
 
 
 /**********************************************************************************************
@@ -111,8 +98,7 @@ The threads are:
         due to unresolved bugs when threaded)
 ********************************************************************************/
 
-static unsigned generation  = 0;
-static unsigned survivors   = 0;
+
 static double   diversity   = 0.0;
 static unsigned murderCount = 0;
 

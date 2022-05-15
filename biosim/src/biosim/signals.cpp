@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "simulator.h"
+#include "statics.h"
 
 namespace BS {
 

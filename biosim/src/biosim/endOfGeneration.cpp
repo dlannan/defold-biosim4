@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "simulator.h"
+#include "statics.h"
 #include "imageWriter.h"
 
 namespace BS {

@@ -50,27 +50,33 @@ Arithmetic
     Polar = Polar + Coord (additive)
     Polar = Polar + Polar (additive)
     Polar = Polar * Polar (dot product)
+
+
+-----------------------------------------------------------
+Rewrite in C instead of C++. Reasons:
+- portability - want to run in wasm, and mobile platforms without hassle
+- performance - Mem usage and speed will be improved greatly.
+- cleaner interfaces - There is alot of interfaces here that are just not needed.    
 */
 
 #include <cstdint>
 #include <cmath>
-#include <algorithm>
 #include "random.h"
 
 namespace BS {
 
 extern bool unitTestBasicTypes();
 
-enum { 
-    Compass_SW = 0, 
-    Compass_S, 
-    Compass_SE, 
-    Compass_W, 
-    Compass_CENTER, 
-    Compass_E, 
-    Compass_NW, 
-    Compass_N, 
-    Compass_NE 
+enum Compass { 
+    SW = 0, 
+    S, 
+    SE, 
+    W, 
+    CENTER, 
+    E, 
+    NW, 
+    N, 
+    NE 
 };
 
 struct Dir;
@@ -79,9 +85,10 @@ struct Polar;
 
 // Supports the eight directions in enum class Compass plus CENTER.
 struct __attribute__((packed)) Dir {
-    static Dir random8() { return Dir(Compass_N).rotate(randomUint(0, 7)); }
 
-    Dir(uint8_t dir = Compass_CENTER) : dir9{dir} {}
+    static Dir random8() { return Dir(Compass.N).rotate(randomUint(0, 7)); }
+
+    Dir(uint8_t dir = Compass.CENTER) { dir9 = dir; }
     Dir& operator=(const uint8_t& d) { dir9 = d; return *this; }
     uint8_t asInt() const { return (uint8_t)dir9; }
     Coord asNormalizedCoord() const;  // (-1, -0, 1, -1, 0, 1)
@@ -105,7 +112,7 @@ private:
 // wraps like int16_t. Can be used, e.g., for a location in the simulator grid, or
 // for the difference between two locations.
 struct __attribute__((packed)) Coord {
-    Coord(int16_t x0 = 0, int16_t y0 = 0) : x{x0}, y{y0} { }
+    Coord(int16_t x0 = 0, int16_t y0 = 0) { x=0; y=0; }
     bool isNormalized() const { return x >= -1 && x <= 1 && y >= -1 && y <= 1; }
     Coord normalize() const;
     unsigned length() const { return (int)(std::sqrt(x * x + y * y)); } // round down
@@ -114,9 +121,9 @@ struct __attribute__((packed)) Coord {
 
     bool operator==(Coord c) const { return x == c.x && y == c.y; }
     bool operator!=(Coord c) const { return x != c.x || y != c.y; }
-    Coord operator+(Coord c) const { return Coord{(int16_t)(x + c.x), (int16_t)(y + c.y)}; }
-    Coord operator-(Coord c) const { return Coord{(int16_t)(x - c.x), (int16_t)(y - c.y)}; }
-    Coord operator*(int a) const { return Coord{(int16_t)(x * a), (int16_t)(y * a)}; }
+    Coord operator+(Coord c) const { return Coord((int16_t)(x + c.x), (int16_t)(y + c.y)); }
+    Coord operator-(Coord c) const { return Coord((int16_t)(x - c.x), (int16_t)(y - c.y)); }
+    Coord operator*(int a) const { return Coord((int16_t)(x * a), (int16_t)(y * a)); }
     Coord operator+(Dir d) const { return *this + d.asNormalizedCoord(); }
     Coord operator-(Dir d) const { return *this - d.asNormalizedCoord(); }
 
@@ -131,10 +138,10 @@ public:
 // Polar magnitudes are signed 32-bit integers so that they can extend across any 2D
 // area defined by the Coord class.
 struct __attribute__((packed)) Polar {
-    explicit Polar(int mag0 = 0, uint8_t dir0 = Compass_CENTER)
-         : mag{mag0}, dir{Dir{dir0}} { }
+    explicit Polar(int mag0 = 0, uint8_t dir0 = Compass.CENTER)
+        { mag = mag0; dir = Dir(dir0); }
     explicit Polar(int mag0, Dir dir0)
-         : mag{mag0}, dir{dir0} { }
+        { mag = mag0; dir = dir0; }
     Coord asCoord() const;
 public:
     int mag;
