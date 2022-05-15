@@ -10,9 +10,6 @@ local Coord = require("Coord")
 -- // for direct access where the y index is the inner loop.
 -- // Element values are not otherwise interpreted by class Grid.
 
-local EMPTY = 0 -- // Index value 0 is reserved
-local BARRIER = 0xffff
-
 local Grid = {
     sizex   = 0,
     sizey   = 0,
@@ -21,6 +18,11 @@ local Grid = {
     barrierLocations = {},
     barrierCenters = {},
 }
+
+Grid.EMPTY = 0 -- // Index value 0 is reserved
+Grid.BARRIER = 0xffff
+
+
 
 -- // Column order here allows us to access grid elements as data[x][y]
 -- // while thinking of x as column and y as row
@@ -48,10 +50,10 @@ Grid.at = function(self, loc) return self.data[loc.x][loc.y] end
 Grid.atXY = function(self, x, y) return self.data[x][y] end
 
 Grid.isInBounds = function(self, loc) return loc.x >= 0 and loc.x < self:sizeX() and loc.y >= 0 and loc.y < self:sizeY() end
-Grid.isEmptyAt = function(self, loc) return self:at(loc) == EMPTY end
-Grid.isBarrierAt = function(self, loc) return self:at(loc) == BARRIER end
+Grid.isEmptyAt = function(self, loc) return self:at(loc) == Grid.EMPTY end
+Grid.isBarrierAt = function(self, loc) return self:at(loc) == Grid.BARRIER end
 -- // Occupied means an agent is living there.
-Grid.isOccupiedAt = function(self, loc) return self:at(loc) ~= EMPTY and self:at(loc) ~= BARRIER end
+Grid.isOccupiedAt = function(self, loc) return self:at(loc) ~= Grid.EMPTY and self:at(loc) ~= Grid.BARRIER end
 Grid.isBorder = function(self, loc) return loc.x == 0 or loc.x == self:sizeX() - 1 or loc.y == 0 or loc.y == self:sizeY() - 1 end
 
 Grid.set = function(self, loc, val) self.data[loc.x][loc.y] = val end
@@ -92,6 +94,167 @@ visitNeighborhood = function(loc, radius, f)
     end
 end
 
+-- // This generates barrier points, which are grid locations with value
+-- // BARRIER. A list of barrier locations is saved in private member
+-- // Grid::barrierLocations and, for some scenarios, Grid::barrierCenters.
+-- // Those members are available read-only with Grid::getBarrierLocations().
+-- // This function assumes an empty grid. This is typically called by
+-- // the main simulator thread after Grid::init() or Grid::zeroFill().
+
+-- // This file typically is under constant development and change for
+-- // specific scenarios.
+
+Grid.createBarrier(self, barrierType)
+
+    self.barrierLocations = {}
+    self.barrierCenters = {} --  // used only for some barrier types
+
+    local drawBox = function(minX, minY, maxX, maxY) 
+        for x = minX, maxX do
+            for y = minY, maxY do
+                grid:set(x, y, BARRIER)
+                tinsert(self.barrierLocations, {x, y} )
+            end
+        end 
+    end
+
+    if(barrierType == 0) then 
+        return
+
+    -- // Vertical bar in constant location
+    elseif(barrierType == 1) then 
+        
+        local minX = p.sizeX / 2
+        local maxX = minX + 1
+        local minY = p.sizeY / 4
+        local maxY = minY + p.sizeY / 2
+
+        for x = minX, maxX do
+            for y = minY, maxY do
+                grid:set(x, y, Grid.BARRIER)
+                tinsert(  self.barrierLocations, {x, y} )
+            end
+        end
+
+    -- // Vertical bar in random location
+    elseif(barrierType == 2) then 
+        
+        local minX = randomUint(20, p.sizeX - 20)
+        local maxX = minX + 1
+        local minY = randomUint(20, p.sizeY / 2 - 20)
+        local maxY = minY + p.sizeY / 2
+
+        for x = minX, maxX do
+            for y = minY, maxY do 
+                grid:set(x, y, Grid.BARRIER)
+                tinsert(self.barrierLocations, {x, y} )
+            end
+        end 
+
+    -- // five blocks staggered
+    elseif(barrierType == 3) then 
+
+        local blockSizeX = 2
+        local blockSizeY = p.sizeX / 3
+
+        local x0 = p.sizeX / 4 - blockSizeX / 2
+        local y0 = p.sizeY / 4 - blockSizeY / 2
+        local x1 = x0 + blockSizeX
+        local y1 = y0 + blockSizeY
+
+        drawBox(x0, y0, x1, y1)
+        x0 = x0 + p.sizeX / 2
+        x1 = x0 + blockSizeX
+        drawBox(x0, y0, x1, y1)
+        y0 = y0 + p.sizeY / 2
+        y1 = y0 + blockSizeY
+        drawBox(x0, y0, x1, y1)
+        x0 = x0 - p.sizeX / 2
+        x1 = x0 + blockSizeX
+        drawBox(x0, y0, x1, y1)
+        x0 = p.sizeX / 2 - blockSizeX / 2
+        x1 = x0 + blockSizeX
+        y0 = p.sizeY / 2 - blockSizeY / 2
+        y1 = y0 + blockSizeY
+        drawBox(x0, y0, x1, y1)
+        return
+
+    -- // Horizontal bar in constant location
+    elseif(barrierType == 4) then 
+        local minX = p.sizeX / 4;
+        local maxX = minX + p.sizeX / 2;
+        local minY = p.sizeY / 2 + p.sizeY / 4;
+        local maxY = minY + 2;
+
+        for x = minX, maxX do
+            for y = minY, maxY do
+                grid:set(x, y, Grid.BARRIER)
+                tinsert(self.barrierLocations, {x, y} )
+            end
+        end
+
+    -- // Three floating islands -- different locations every generation
+    elseif(barrierType == 5) then 
+
+        local radius = 3.0
+        local margin = 2 * radius
+
+        local randomLoc = function() 
+-- //                return Coord( (int16_t)randomUint((int)radius + margin, p.sizeX - ((float)radius + margin)),
+-- //                              (int16_t)randomUint((int)radius + margin, p.sizeY - ((float)radius + margin)) );
+            return Coord.new( randomUint(margin, p.sizeX - margin),
+                            randomUint(margin, p.sizeY - margin) )
+        end 
+
+        local center0 = randomLoc()
+        local center1 = {}
+        local center2 = {}
+
+        while ( (center0:SUB(center1)):length() < margin ) do
+            center1 = randomLoc()
+        end
+
+        while ( (center0:SUB(center2)):length() < margin or (center1:SUB(center2)):length() < margin) do
+            center2 = randomLoc()
+        end
+
+        tinsert(self.barrierCenters, center0)
+        -- //barrierCenters.push_back(center1);
+        -- //barrierCenters.push_back(center2);
+
+        local f = function(loc) 
+            grid:set(loc, Grid.BARRIER)
+            tinsert(self.barrierLocations, loc)
+        end 
+
+        visitNeighborhood(center0, radius, f)
+        -- //visitNeighborhood(center1, radius, f);
+        -- //visitNeighborhood(center2, radius, f);
+
+
+    -- // Spots, specified number, radius, locations
+    elseif(barrierType == 6) then 
+        
+        local numberOfLocations = 5
+        local radius = 5.0
+
+        local f = function(loc) 
+            grid:set(loc, Grid.BARRIER)
+            tinsert(self.barrierLocations, loc)
+        end 
+
+        local verticalSliceSize = p.sizeY / (numberOfLocations + 1)
+
+        for n = 1, numberOfLocations do
+            local loc = Coord.new( p.sizeX / 2, n * verticalSliceSize )
+            visitNeighborhood(loc, radius, f)
+            tinsert(self.barrierCenters, loc)
+        end 
+
+    else 
+        assert(false)
+    end 
+end 
 -- extern unitTestGridVisitNeighborhood();
 
 return Grid

@@ -16,7 +16,7 @@
 #include <chrono>
 #include <climits>
 #include "simulator.h"
-#include "statics.h"
+
 
 namespace BS {
 
