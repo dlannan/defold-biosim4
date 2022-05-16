@@ -3,6 +3,8 @@
 -- // not so much. Fine-tune the challenges by tweaking the corresponding code
 -- // in survival-criteria.cpp.
 
+require("globals")
+
 local Sim = {}
 
 Sim.CHALLENGE_CIRCLE = 0
@@ -142,17 +144,17 @@ Sim.simulator = function(argv)
     -- // Simulator parameters are available read-only through the global
     -- // variable p after paramManager is initialized.
     -- // Todo: remove the hardcoded parameter filename.
-    paramManager.setDefaults()
-    paramManager.registerConfigFile(argv)
-    paramManager.updateFromConfigFile(0)
-    paramManager.checkParameters()      -- // check and report any problems
+    p.setDefaults()
+    p.registerConfigFile(argv)
+    p.updateFromConfigFile(0)
+    p.checkParameters()      -- // check and report any problems
     randomUint.initialize()             -- // seed the RNG for main-thread use
 
     -- // Allocate container space. Once allocated, these container elements
     -- // will be reused in each new generation.
-    grid.init(p.sizeX, p.sizeY)         -- // the land on which the peeps live
-    signals.init(p.signalLayers, p.sizeX, p.sizeY)  -- // where the pheromones waft
-    peeps.init(p.population)            -- // the peeps themselves
+    grid:init(p.sizeX, p.sizeY)         -- // the land on which the peeps live
+    signals:init(p.signalLayers, p.sizeX, p.sizeY)  -- // where the pheromones waft
+    peeps:init(p.population)            -- // the peeps themselves
 
     -- // If imageWriter is to be run in its own thread, start it here:
     -- //std::thread t(&ImageWriter::saveFrameThread, &imageWriter);

@@ -152,3 +152,5 @@ end
 paramsInit = function(argc, argv)
 
 end
+
+return ParamManager

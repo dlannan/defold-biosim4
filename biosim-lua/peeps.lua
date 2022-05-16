@@ -91,3 +91,5 @@ Peeps.getIndiv = function(self, loc) return self.individuals[grid.at(loc)] end
 
 -- // Direct access:
 Peeps.getIndivIndex = function(self, index)  return self.individuals[index] end
+
+return Peeps

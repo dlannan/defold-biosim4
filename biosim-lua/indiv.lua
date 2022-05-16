@@ -143,4 +143,188 @@ Indiv.feedForward(self, simStep)
     return actionLevels
 end
 
+-- // Returned sensor values range SENSOR_MIN..SENSOR_MAX
+Indiv.getSensor = function(sensorNum, simStep) 
+
+    local sensorVal = 0.0
+
+    local sensorNumFunc = {
+        Sensor.AGE = function()
+        -- // Converts age (units of simSteps compared to life expectancy)
+        -- // linearly to normalized sensor range 0.0..1.0
+            return (float)age / p.stepsPerGeneration;
+        end,
+        Sensor.BOUNDARY_DIST = function()   
+        -- // Finds closest boundary, compares that to the max possible dist
+        -- // to a boundary from the center, and converts that linearly to the
+        -- // sensor range 0.0..1.0
+            local distX = math.min(loc.x, (p.sizeX - loc.x) - 1)
+            local distY = math.min(loc.y, (p.sizeY - loc.y) - 1)
+            local closest = math.min(distX, distY)
+            local maxPossible = math.max(p.sizeX / 2 - 1, p.sizeY / 2 - 1)
+            return closest / maxPossible
+        end,
+    
+        Sensor.BOUNDARY_DIST_X = function()   
+        -- // Measures the distance to nearest boundary in the east-west axis,
+        -- // max distance is half the grid width; scaled to sensor range 0.0..1.0.
+            local minDistX = math.min(loc.x, (p.sizeX - loc.x) - 1)
+            return minDistX / (p.sizeX / 2.0)
+        end,
+    
+        Sensor.BOUNDARY_DIST_Y = function()
+        -- // Measures the distance to nearest boundary in the south-north axis,
+        -- // max distance is half the grid height; scaled to sensor range 0.0..1.0.
+            local minDistY = math.min(loc.y, (p.sizeY - loc.y) - 1)
+            return minDistY / (p.sizeY / 2.0)
+        end,
+
+        Sensor.LAST_MOVE_DIR_X = function()   
+        -- // X component -1,0,1 maps to sensor values 0.0, 0.5, 1.0
+            local lastX = lastMoveDir:asNormalizedCoord().x
+            local val = 1.0 
+            if(lastX == -1) then val = 0.0 end 
+            sensorVal = val 
+            if(lastX == 0) then sensorVal = 0.5 end 
+            return sensorVal 
+        
+        end,
+
+        Sensor.LAST_MOVE_DIR_Y = function()   
+            -- // Y component -1,0,1 maps to sensor values 0.0, 0.5, 1.0
+            local lastY = lastMoveDir:asNormalizedCoord().y
+            local val = 1.0 
+            if(lastY == -1) then val = 0.0 end 
+            sensorVal = val 
+            if(lastY == 0) then sensorVal = 0.5 end 
+            return sensorVal 
+        end,
+    
+        Sensor.LOC_X = function()
+            -- // Maps current X location 0..p.sizeX-1 to sensor range 0.0..1.0
+            return loc.x / (p.sizeX - 1)
+        end,
+    
+        Sensor.LOC_Y = function()
+            -- // Maps current Y location 0..p.sizeY-1 to sensor range 0.0..1.0
+            return loc.y / (p.sizeY - 1)
+        end,
+    
+        Sensor.OSC1 = function()
+            -- // Maps the oscillator sine wave to sensor range 0.0..1.0;
+            -- // cycles starts at simStep 0 for everbody.
+            local phase = (simStep % oscPeriod) / (float)oscPeriod -- // 0.0..1.0
+            local factor = -math.cos(phase * 2.0 * 3.1415927)
+            assert(factor >= -1.0 and factor <= 1.0)
+            factor = factor + 1.0   --  // convert to 0.0..2.0
+            factor = factor / 2.0   --  // convert to 0.0..1.0
+            sensorVal = factor
+            -- // Clip any round-off error
+            return math.min(1.0, math.max(0.0, sensorVal))
+        end,
+    
+        Sensor.LONGPROBE_POP_FWD = function()   
+            -- // Measures the distance to the nearest other individual in the
+            -- // forward direction. If non found, returns the maximum sensor value.
+            -- // Maps the result to the sensor range 0.0..1.0.
+            return longProbePopulationFwd(loc, lastMoveDir, longProbeDist) / longProbeDist -- // 0..1
+        end,
+    
+        Sensor.LONGPROBE_BAR_FWD = function()
+            -- // Measures the distance to the nearest barrier in the forward
+            -- // direction. If non found, returns the maximum sensor value.
+            -- // Maps the result to the sensor range 0.0..1.0.
+            return longProbeBarrierFwd(loc, lastMoveDir, longProbeDist) / longProbeDist -- // 0..1
+        end,
+    
+        case Sensor.POPULATION = function()   
+            -- // Returns population density in neighborhood converted linearly from
+            -- // 0..100% to sensor range
+            local countLocs = 0
+            local countOccupied = 0
+            local center = loc
+
+            local f = function(Coord tloc) 
+                countLocs = countLocs + 1
+                if (grid:isOccupiedAt(tloc)) then 
+                    countOccupied = countOccupied + 1
+                end 
+            end 
+
+            visitNeighborhood(center, p.populationSensorRadius, f)
+            return countOccupied / countLocs
+        end,
+    
+        Sensor.POPULATION_FWD = function()
+            -- // Sense population density along axis of last movement direction, mapped
+            -- // to sensor range 0.0..1.0
+            return getPopulationDensityAlongAxis(loc, lastMoveDir)
+        end, 
+
+        Sensor.POPULATION_LR = function()
+            -- // Sense population density along an axis 90 degrees from last movement direction
+            return getPopulationDensityAlongAxis(loc, lastMoveDir:rotate90DegCW())
+        end, 
+
+        Sensor.BARRIER_FWD = function()
+            -- // Sense the nearest barrier along axis of last movement direction, mapped
+            -- // to sensor range 0.0..1.0
+            return getShortProbeBarrierDistance(loc, lastMoveDir, p.shortProbeBarrierDistance)
+        end, 
+    
+        Sensor.BARRIER_LR = function()
+            -- // Sense the nearest barrier along axis perpendicular to last movement direction, mapped
+            -- // to sensor range 0.0..1.0
+            return getShortProbeBarrierDistance(loc, lastMoveDir:rotate90DegCW(), p.shortProbeBarrierDistance)
+        end, 
+
+        Sensor.RANDOM = function()
+            -- // Returns a random sensor value in the range 0.0..1.0.
+            return randomUint() / UINT_MAX
+        end, 
+    
+        Sensor.SIGNAL0 = function()
+            -- // Returns magnitude of signal0 in the local neighborhood, with
+            -- // 0.0..maxSignalSum converted to sensorRange 0.0..1.0
+            return getSignalDensity(0, loc)
+        end,
+
+        Sensor.SIGNAL0_FWD = function()
+            -- // Sense signal0 density along axis of last movement direction
+            return getSignalDensityAlongAxis(0, loc, lastMoveDir)
+        end,
+
+        Sensor.SIGNAL0_LR = function()
+            -- // Sense signal0 density along an axis perpendicular to last movement direction
+            getSignalDensityAlongAxis(0, loc, lastMoveDir:rotate90DegCW())
+        end, 
+
+        Sensor.GENETIC_SIM_FWD = function()
+            -- // Return minimum sensor value if nobody is alive in the forward adjacent location,
+            -- // else returns a similarity match in the sensor range 0.0..1.0
+            local loc2 = loc:ADD(lastMoveDir)
+            if (grid:isInBounds(loc2) and grid:isOccupiedAt(loc2)) then
+                local indiv2 = peeps:getIndiv(loc2)
+                if (indiv2.alive) then
+                    return genomeSimilarity(genome, indiv2.genome) -- // 0.0..1.0
+                end 
+            end
+            return sensorVal
+        end,
+    }
+
+    local newVal = sensorNumFunc[sensorNum]
+    if(newVal == nil) then print("Invalid sensor number: "..tostring(sensorNum)) end
+    sensorVal = newVal    
+
+    if (math.isnan(sensorVal) or sensorVal < -0.01 or sensorVal > 1.01) then
+        -- // std::cout << "sensorVal=" << (int)sensorVal << " for " << sensorName((Sensor)sensorNum) << std::endl;
+        sensorVal = math.max(0.0, math.min(sensorVal, 1.0)) -- // clip
+    end 
+
+    assert(!math.isnan(sensorVal) and sensorVal >= -0.01 and sensorVal <= 1.01)
+    return sensorVal
+end
+
+
 return Indiv

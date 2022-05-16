@@ -2,6 +2,11 @@ local tinsert = table.insert
 
 local inifile = require('utils.inifile')
 
+-- Add the path - make requires simpler.
+package.path = package.path..";biosim-lua/?.lua"
+print(package.path)
+--local sim 		= require("biosim-lua.simulator")
+
 local WINDOW_SCALE 		= 1.5
 local AGENT_DATASIZE 	= 10
 --------------------------------------------------------------------------------
@@ -52,7 +57,7 @@ local function startSim(self)
 
 	self.paused = true
 	self.generation = 0
-	biosim.SimulationStart("data/biosim4.ini")
+	-- biosim.SimulationStart("data/biosim4.ini")
 	self.iniTable = inifile.load('data/biosim4.ini', "biosim")	
 	self.population = self.iniTable.lookup["population"].value
 	self.popdatacount = self.population * AGENT_DATASIZE + 1
@@ -70,13 +75,13 @@ end
 
 local function stopSim(self)
 
-	biosim.SimulationMode(0)
+--	biosim.SimulationMode(0)
 	-- Wait until we get no counts.
 	local agents = {}
 	local genstats = {}
 	local count, generation, survivors = 2, 2, 0
 	while(count > 1) do
-		count = biosim.SimulationStep(agents, genstats)
+--		count = biosim.SimulationStep(agents, genstats)
 		generation, survivors, diversity = unpack(genstats)
 	end 
 end 
@@ -306,7 +311,8 @@ function update(self, dt)
 	local agents 	= {}
 	local genstats 	= {}
 	local newgen 	= nil
-	local count = biosim.SimulationStep(agents, genstats)
+	--	local count = biosim.SimulationStep(agents, genstats)
+	genstats = { 0, 0, 0 }
 
 	generation = genstats[1]
 	survivors = genstats[2]
@@ -374,7 +380,7 @@ function update(self, dt)
 		local yscale = 512 / (596 * WINDOW_SCALE)
 		local posy = 512 - (self.mouse.y * yscale - 20)
 		print(posy, self.mouse.y, yscale)
-		biosim.GetAgent( posx, posy, points, names, self.agent, joins, 300, 80.0 )
+--		biosim.GetAgent( posx, posy, points, names, self.agent, joins, 300, 80.0 )
 		--pprint(joins)
 		drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
 		self.agent.nodes = points 
