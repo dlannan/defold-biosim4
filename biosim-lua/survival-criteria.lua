@@ -1,4 +1,6 @@
 
+local Coord = require("biosim-lua.Coord")
+
 -- // Returns true and a score 0.0..1.0 if passed, false if failed
 passedSurvivalCriterion = function(indiv, challenge)
 

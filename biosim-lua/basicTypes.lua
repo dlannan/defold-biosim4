@@ -1,72 +1,51 @@
-local Coord = require("Coord")
+local Coord = require("biosim-lua.Coord")
 
-/*
-Basic types used throughout the project:
+-- /*
+-- Basic types used throughout the project:
 
-Compass - an enum with enumerants SW, S, SE, W, CENTER, E, NW, N, NE
+-- Compass - an enum with enumerants SW, S, SE, W, CENTER, E, NW, N, NE
 
-    Compass arithmetic values:
+--     Compass arithmetic values:
 
-        6  7  8
-        3  4  5
-        0  1  2
+--         6  7  8
+--         3  4  5
+--         0  1  2
 
-Dir, Coord, Polar, and their constructors:
+-- Dir, Coord, Polar, and their constructors:
 
-    Dir - abstract type for 8 directions plus center
-    ctor Dir(Compass = CENTER)
+--     Dir - abstract type for 8 directions plus center
+--     ctor Dir(Compass = CENTER)
 
-    Coord - signed int16_t pair, absolute location or difference of locations
-    ctor Coord() = 0,0
+--     Coord - signed int16_t pair, absolute location or difference of locations
+--     ctor Coord() = 0,0
 
-    Polar - signed magnitude and direction
-    ctor Polar(Coord = 0,0)
+--     Polar - signed magnitude and direction
+--     ctor Polar(Coord = 0,0)
 
-Conversions
+-- Conversions
 
-    uint8_t = Dir.asInt()
+--     uint8_t = Dir.asInt()
 
-    Dir = Coord.asDir()
-    Dir = Polar.asDir()
+--     Dir = Coord.asDir()
+--     Dir = Polar.asDir()
 
-    Coord = Dir.asNormalizedCoord()
-    Coord = Polar.asCoord()
+--     Coord = Dir.asNormalizedCoord()
+--     Coord = Polar.asCoord()
 
-    Polar = Dir.asNormalizedPolar()
-    Polar = Coord.asPolar()
+--     Polar = Dir.asNormalizedPolar()
+--     Polar = Coord.asPolar()
 
-Arithmetic
+-- Arithmetic
 
-    Dir.rotate(int n = 0)
+--     Dir.rotate(int n = 0)
 
-    Coord = Coord + Dir
-    Coord = Coord + Coord
-    Coord = Coord + Polar
+--     Coord = Coord + Dir
+--     Coord = Coord + Coord
+--     Coord = Coord + Polar
 
-    Polar = Polar + Coord (additive)
-    Polar = Polar + Polar (additive)
-    Polar = Polar * Polar (dot product)
-
-
------------------------------------------------------------
-Rewrite in C instead of C++. Reasons:
-- portability - want to run in wasm, and mobile platforms without hassle
-- performance - Mem usage and speed will be improved greatly.
-- cleaner interfaces - There is alot of interfaces here that are just not needed.
-- quicker builds.    
-*/
-
-Compass = { 
-    SW  = 0, 
-    S   = 1, 
-    SE  = 2, 
-    W   = 3, 
-    CENTER = 4, 
-    E   = 5, 
-    NW  = 6, 
-    N   = 7, 
-    NE  = 8 
-}
+--     Polar = Polar + Coord (additive)
+--     Polar = Polar + Polar (additive)
+--     Polar = Polar * Polar (dot product)
 
 -- // This rotates a Dir value by the specified number of steps. There are
 -- // eight steps per full rotation. Positive values are clockwise; negative
@@ -91,25 +70,25 @@ local rotations = {
 }
 
 
-/*
-    A normalized Coord is a Coord with x and y == -1, 0, or 1.
-    A normalized Coord may be used as an offset to one of the
-    8-neighbors.
-
-    A Dir value maps to a normalized Coord using
-
-       Coord { (d%3) - 1, (trunc)(d/3) - 1  }
-
-       0 => -1, -1  SW
-       1 =>  0, -1  S
-       2 =>  1, -1, SE
-       3 => -1,  0  W
-       4 =>  0,  0  CENTER
-       5 =>  1   0  E
-       6 => -1,  1  NW
-       7 =>  0,  1  N
-       8 =>  1,  1  NE
-*/
+-- /*
+--     A normalized Coord is a Coord with x and y == -1, 0, or 1.
+--     A normalized Coord may be used as an offset to one of the
+--     8-neighbors.
+-- 
+--     A Dir value maps to a normalized Coord using
+-- 
+--        Coord { (d%3) - 1, (trunc)(d/3) - 1  }
+-- 
+--        0 => -1, -1  SW
+--        1 =>  0, -1  S
+--        2 =>  1, -1, SE
+--        3 => -1,  0  W
+--        4 =>  0,  0  CENTER
+--        5 =>  1   0  E
+--        6 => -1,  1  NW
+--        7 =>  0,  1  N
+--        8 =>  1,  1  NE
+-- */
 
 
 local NormalizedCoords = { 
@@ -154,7 +133,7 @@ Polar = {
         -- // -1 for mag<0. An XOR with this copies the sign onto 1/2, to be exact
         -- // we'd then also subtract it, but we don't need to be that precise.
     
-        local temp = (bit.rshift(mag, 32) ^ (bit.lshift(1, 31) - 1)
+        local temp = bit.bxor(bit.rshift(mag, 32), (bit.lshift(1, 31) - 1))
         len = (len + temp) / bit.lshift(1, 32) -- // Divide to make sure we get an arithmetic shift
     
         return NormalizedCoords[self.dir:asInt() + 1] * len
@@ -167,11 +146,9 @@ Polar = {
 -- // Supports the eight directions in enum class Compass plus CENTER.
 Dir = {
     
-    random8 = function() return Dir.Dir(Compass.N).rotate(randomUint(0, 7)) end,
-
     Dir = function(self, dir) self.dir9 = dir or Compass.CENTER end,
     Get = function(self, d) self.dir9 = d; return self end,
-    asInt = function(self) return dir9 end,
+    asInt = function(self) return math.floor(self.dir9 + 0.5) end,
 
     asNormalizedCoord = function(self) 
         return NormalizedCoords[self:asInt() + 1]
@@ -194,7 +171,15 @@ Dir = {
 
     dir9 = 0,
 }  
-    
 
-    
-lineType = { "", }    
+Dir.new = function(newDir)
+    local d = table.shallowcopy(Dir)
+    d:Dir(newDir)
+    return d
+end 
+
+Dir.random8 = function() 
+    local d = Dir.new(Compass.N)
+    return d:rotate(randomUint:GetRange(0, 7)) 
+end
+

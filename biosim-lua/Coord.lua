@@ -1,6 +1,20 @@
 
 local B2N ={ [true]=1, [false]=0 }
 
+-----------------------------------------------------------
+
+Compass = { 
+    SW  = 0, 
+    S   = 1, 
+    SE  = 2, 
+    W   = 3, 
+    CENTER = 4, 
+    E   = 5, 
+    NW  = 6, 
+    N   = 7, 
+    NE  = 8 
+}
+
 -- // This rotates a Dir value by the specified number of steps. There are
 -- // eight steps per full rotation. Positive values are clockwise; negative
 -- // values are counterclockwise. E.g., rotate(4) returns a direction 90
@@ -16,7 +30,7 @@ local C = Compass.CENTER
 -- // for the difference between two locations.
 
 local Coord = {
-    new = function(x0, y0) { return { x=0; y=0 } end,
+    new = function(x0, y0) return { x=0; y=0 } end,
     x = 0,
     y = 0,
 }

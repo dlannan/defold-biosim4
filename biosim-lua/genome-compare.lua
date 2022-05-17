@@ -136,9 +136,9 @@ geneticDiversity = function()
     local similaritySum = 0.0
 
     while (count > 0) do
-        local index0 = randomUint(1, p.population - 1) -- // skip first and last elements
+        local index0 = randomUint:GetRange(1, p.population - 1) -- // skip first and last elements
         local index1 = index0 + 1
-        similaritySum = similaritySum + genomeSimilarity(peeps[index0].genome, peeps[index1].genome)
+        similaritySum = similaritySum + genomeSimilarity(peeps:getIndivIndex(index0).genome, peeps:getIndivIndex(index1).genome)
         --count;
         numSamples = numSamples + 1
     end

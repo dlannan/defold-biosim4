@@ -1,3 +1,4 @@
+
 -- // Requires that the grid, signals, and peeps containers have been allocated.
 -- // This will erase the grid and signal layers, then create a new population in
 -- // the peeps container at random locations with random genomes.
@@ -13,7 +14,8 @@ initializeGeneration0 = function()
     -- // Spawn the population. The peeps container has already been allocated,
     -- // just clear and reuse it
     for index = 1, p.population do
-        peeps[index]:initialize(index, grid:findEmptyLocation(), makeRandomGenome())
+        local indiv = peeps:getIndivIndex(index)
+        indiv:initialize(index, grid:findEmptyLocation(), makeRandomGenome())
     end
 end
 
@@ -35,7 +37,7 @@ initializeNewGeneration = function(parentGenomes, generation)
 
     -- // Spawn the population. This overwrites all the elements of peeps[]
     for index = 1, p.population do
-        peeps[index]:initialize(index, grid:findEmptyLocation(), generateChildGenome(parentGenomes))
+        peeps:getIndivIndex(index):initialize(index, grid:findEmptyLocation(), generateChildGenome(parentGenomes))
     end 
 end
 
@@ -68,12 +70,12 @@ spawnNewGeneration = function(generation, murderCount)
         -- // First, make a list of all the individuals who will become parents; save
         -- // their scores for later sorting. Indexes start at 1.
         for index = 1, p.population do
-            local passed = passedSurvivalCriterion(peeps[index], p.challenge)
+            local passed = passedSurvivalCriterion(peeps:getIndivIndex(index), p.challenge)
             -- // Save the parent genome if it results in valid neural connections
             -- // ToDo: if the parents no longer need their genome record, we could
             -- // possibly do a move here instead of copy, although it's doubtful that
             -- // the optimization would be noticeable.
-            if (passed.first and not peeps[index].nnet.connections:empty()) then
+            if (passed.first and not peeps:getIndivIndex(index).nnet.connections:empty()) then
                 tinsert(parents, { index, passed[2] } )
             end 
         end 
@@ -88,13 +90,13 @@ spawnNewGeneration = function(generation, murderCount)
 
         for index = 1, p.population do
             -- // This the test for the spawning area:
-            local passed = passedSurvivalCriterion(peeps[index], CHALLENGE_ALTRUISM)
-            if (passed[1] and not peeps[index].nnet.connections:empty()) then
+            local passed = passedSurvivalCriterion(peeps:getIndivIndex(index), CHALLENGE_ALTRUISM)
+            if (passed[1] and not peeps:getIndivIndex(index).nnet.connections:empty()) then
                 tinsert(parents, { index, passed[2] } )
             else
                 -- // This is the test for the sacrificial area:
-                passed = passedSurvivalCriterion(peeps[index], CHALLENGE_ALTRUISM_SACRIFICE);
-                if (passed[1] and not peeps[index].nnet.connections:empty()) then
+                passed = passedSurvivalCriterion(peeps:getIndivIndex(index), CHALLENGE_ALTRUISM_SACRIFICE);
+                if (passed[1] and not peeps:getIndivIndex(index).nnet.connections:empty()) then
                     if (considerKinship) then
                         tinsert(sacrificesIndexes, index)
                     else 
@@ -119,8 +121,8 @@ spawnNewGeneration = function(generation, murderCount)
                         local startIndex = randomUint(0, #parents - 1)
                         for count = 0, #parents do 
                             local possibleParent = parents[(startIndex + count) % #parents]
-                            local g1 = peeps[sacrificedIndex].genome
-                            local g2 = peeps[possibleParent.first].genome
+                            local g1 = peeps:getIndivIndex(sacrificedIndex).genome
+                            local g2 = peeps:getIndivIndex(possibleParent.first).genome
                             local similarity = genomeSimilarity(g1, g2)
                             if (similarity >= threshold) then 
                                 tinsert(survivingKin, possibleParent)
@@ -131,7 +133,7 @@ spawnNewGeneration = function(generation, murderCount)
                     end 
                 end 
                 print(tostring(#parents).." passed, "..
-                            tostring(#sacrificesIndexes).." sacrificed, "
+                            tostring(#sacrificesIndexes).." sacrificed, "..
                             tostring(#survivingKin).." saved" )
                 parents = survivingKin
             end 
@@ -152,7 +154,7 @@ spawnNewGeneration = function(generation, murderCount)
     -- // scores if the parents[] container was sorted by score
     parentGenomes = {}
     for k, parent in ipairs(parents) do
-        tinsert(parentGenomes, peeps[parent[1]].genome)
+        tinsert(parentGenomes, peeps:getIndivIndex(parent[1]).genome)
     end
 
     -- // std::cout << "Gen " << generation << ", " << parentGenomes.size() << " survivors" << std::endl;

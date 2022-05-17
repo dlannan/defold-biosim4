@@ -1,4 +1,9 @@
 
+
+SENSOR = 1 -- // always a source
+ACTION = 1 -- // always a sink
+NEURON = 0 -- // can be either a source or sink
+
 -- // This file defines which sensor input neurons and which action output neurons
 -- // are compiled into the simulator. This file can be modified to create a simulator
 -- // executable that supports only a subset of all possible sensor or action neurons.

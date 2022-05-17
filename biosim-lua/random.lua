@@ -14,7 +14,7 @@
         d       = 0.0,
 }
 
-RandomUintGenerator.initialize = function() -- // must be called to seed the RNG
+RandomUintGenerator.initialize = function(self) -- // must be called to seed the RNG
 
     if (p.deterministic) then
         -- // Initialize Marsaglia. Overflow wrap-around is ok. We just want
@@ -73,7 +73,7 @@ end
 -- // The Marsaglia algorithm is from http://www0.cs.ucl.ac.uk/staff/d.jones/GoodPracticeRNG.pdf
 -- // where it is attributed to G. Marsaglia.
 -- //
-RandomUintGenerator.Get == function(self) 
+RandomUintGenerator.Get = function(self) 
     if (false) then
         -- // Marsaglia algorithm
         local t, a = 698769069, 698769069
@@ -82,17 +82,18 @@ RandomUintGenerator.Get == function(self)
         self.rngy = bit.xor(self.rngy, bit.rshift(rngy, 17))
         self.rngy = bit.xor(self.rngy, bit.lshift(rngy, 5)) -- /* y must never be set to zero! */
         t = a * self.rngz + self.rngc;
-        self.rngc = bit.rshift(t, 32)/* Also avoid setting z=c=0! */
-        return self.rngx + self.rngy + (self.rngz = t)
+        self.rngc = bit.rshift(t, 32) -- /* Also avoid setting z=c=0! */
+        self.rngz = t
+        return self.rngx + self.rngy + self.rngz
     else
         -- // Jenkins algorithm
         function rot32(x,k) return bit.bor(bit.lshift(x, k), bit.rshift(x, 32-k)) end
         local e = self.a - rot32(self.b, 27)
         self.a = bit.bxor(self.b, rot32(self.c, 17))
         self.b = self.c + self.d;
-        self.c = self.d + self.e;
-        self.d = self.e + self.a;
-        return d
+        self.c = self.d + e;
+        self.d = e + self.a;
+        return self.d
     end
 end 
 
@@ -104,9 +105,10 @@ end
 -- // inner loops. Alternatively, we could create a standard C++ "distribution"
 -- // object here, but we would first need to investigate its overhead.
 -- //
-RandomUintGenerator.GetMinMax = function(self, min, max)
+RandomUintGenerator.GetRange = function(self, min, max)
     assert(max >= min)
-    return self:Get() % (max - min + 1)) + min
+    local tmp = self:Get()
+    return tmp % (max - min + 1) + min
 end
 
 

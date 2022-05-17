@@ -1,5 +1,5 @@
 
-require("sensor-actions")
+require("biosim-lua.sensor-actions")
 
 -- // Given a factor in the range 0.0..1.0, return a bool with the
 -- // probability of it being true proportional to factor. For example, if
@@ -8,7 +8,7 @@ require("sensor-actions")
 local prob2bool = function(factor)
 
     assert(factor >= 0.0 and factor <= 1.0)
-    return (randomUint() / RANDOM_UINT_MAX) < factor
+    return (randomUint:Get() / RANDOM_UINT_MAX) < factor
 end
 
 

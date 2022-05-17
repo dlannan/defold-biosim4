@@ -1,5 +1,6 @@
 require("utils.copies")
-local Coord = require("Coord")
+local Coord = require("biosim-lua.Coord")
+local Indiv = require("biosim-lua.indiv")
 
 tinsert = table.insert
 
@@ -24,11 +25,11 @@ Peeps = {
     moveQueue   = {},
 }
 
-Peeps.new = function() return table.deepcopy(Peeps) end -- // makes zero individuals
-
 Peeps.init = function(self, population)
     -- // Index 0 is reserved, so add one:
-    for i=0, population do self.individuals[i] = {} end 
+    for i=0, population do 
+        self.individuals[i] = Indiv_new()
+    end 
 end
 
 -- // Safe to call during multithread mode.
@@ -39,14 +40,14 @@ end
 Peeps.queueForDeath = function(self, indiv)
     assert(indiv.alive)
 
-    tinsert(self.deathQueue indiv.index)
+    tinsert(self.deathQueue, indiv.index)
 end 
 
 -- // Called in single-thread mode at end of sim step. This executes all the
 -- // queued deaths, removing the dead agents from the grid.
 Peeps.drainDeathQueue = function(self)
     for k, index in pairs(self.deathQueue) do
-        indiv = peeps[index]
+        indiv = peeps:getIndivIndex(index)
         grid:set(indiv.loc, 0)
         indiv.alive = false
     end 
@@ -69,11 +70,11 @@ end
 -- // death queue was drained, so we'll ignore already-dead agents.
 Peeps.drainMoveQueue = function(self) 
     for k, moveRecord in pairs(self.moveQueue) do
-        local indiv = peeps[k]
+        local indiv = peeps:getIndivIndex(k)
         if (indiv.alive) then 
             local newLoc = moveRecord
             local moveDir = (newLoc:SUB(indiv.loc)):asDir()
-            if (grid.isEmptyAt(newLoc)) then
+            if (grid:isEmptyAt(newLoc)) then
                 grid:set(indiv.loc, 0)
                 grid:set(newLoc, indiv.index)
                 indiv.loc = newLoc
@@ -84,12 +85,18 @@ Peeps.drainMoveQueue = function(self)
     self.moveQueue = {}
 end 
 
-Peeps.deathQueueSize = function(self)  return #deathQueue end
+Peeps.deathQueueSize = function(self)  
+    return #self.deathQueue 
+end
 
 -- // getIndiv() does no error checking -- check first that loc is occupied
-Peeps.getIndiv = function(self, loc) return self.individuals[grid.at(loc)] end 
+Peeps.getIndiv = function(self, loc)
+    return self.individuals[grid:at(loc)] 
+end 
 
 -- // Direct access:
-Peeps.getIndivIndex = function(self, index)  return self.individuals[index] end
+Peeps.getIndivIndex = function(self, index)  
+    return self.individuals[index] 
+end
 
 return Peeps

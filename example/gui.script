@@ -3,9 +3,7 @@ local tinsert = table.insert
 local inifile = require('utils.inifile')
 
 -- Add the path - make requires simpler.
-package.path = package.path..";biosim-lua/?.lua"
-print(package.path)
---local sim 		= require("biosim-lua.simulator")
+local sim 		= require("biosim-lua.simulator")
 
 local WINDOW_SCALE 		= 1.5
 local AGENT_DATASIZE 	= 10
@@ -136,6 +134,7 @@ function init(self)
 	-- local bolditalic_data, error = sys.load_resource("/example/fonts/Montserrat-BoldItalic.ttf")
 	-- self.fonts["BoldItalic"] = imgui.font_add_ttf_data(bolditalic_data, #bolditalic_data, fontsize, fontsizebase)
 
+	sim:simulator('data/biosim4.ini')
 	startSim(self)
 	-- pprint(self.iniTable)
 	-- 		inifile.save('data/biosim4.ini', self.iniTable)

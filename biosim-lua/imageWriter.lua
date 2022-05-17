@@ -18,7 +18,7 @@ ImageWriter = {
     droppedFrameCount   = 0,
     busy                = 0,
     dataReady           = false,
-    data                = table.deepcopy(ImageFrameData),
+    data                = table.shallowcopy(ImageFrameData),
     abortRequested      = false,
     skippedFrames       = 0,
 }
@@ -63,9 +63,9 @@ saveOneFrameImmed = function( data)
 
         -- // Prevent color mappings to very bright colors (hard to see):
         if (rgbToLuma(color[0], color[1], color[2]) > maxLumaVal) then
-            if (color[0] > maxColorVal) color[0] = color[0] % maxColorVal
-            if (color[1] > maxColorVal) color[1] = color[1] % maxColorVal
-            if (color[2] > maxColorVal) color[2] = color[2] % maxColorVal
+            if (color[0] > maxColorVal) then color[0] = color[0] % maxColorVal end 
+            if (color[1] > maxColorVal) then color[1] = color[1] % maxColorVal end
+            if (color[2] > maxColorVal) then color[2] = color[2] % maxColorVal end 
         end 
 
         -- // image.draw_circle(
@@ -83,7 +83,7 @@ saveOneFrameImmed = function( data)
 end 
 
 ImageWriter.new = function()
-    local imgw = table.deepcopy(ImageWriter)
+    local imgw = table.shallowcopy(ImageWriter)
     imgw.droppedFrameCount = 0
     imgw.busy = true 
     imgw.dataReady = false 
@@ -135,7 +135,7 @@ ImageWriter.saveVideoFrame = function(self, simStep, generation)
         self.data.signalLayers = {}
         -- //todo!!!
         for index = 1, p.population do
-            indiv = peeps[index]
+            indiv = peeps:getIndivIndex(index)
             if (indiv.alive) then
                 tinsert(self.data.indivLocs, indiv.loc)
                 tinsert(self.data.indivColors, makeGeneticColor(indiv.genome))
@@ -170,7 +170,7 @@ ImageWriter.saveVideoFrameSync = function(self, simStep, generation)
     self.data.signalLayers = {}
     -- //todo!!!
     for index = 1, p.population do
-        indiv = peeps[index]
+        indiv = peeps:getIndivIndex(index)
         if (indiv.alive) then
             tinsert(self.data.indivLocs, indiv.loc)
             tinsert(self.data.indivColors, makeGeneticColor(indiv.genome))

@@ -1,4 +1,4 @@
-local Sim = require("simulator")
+local Sim = require("biosim-lua.simulator")
 
 /*
 At the end of each sim step, this function is called in single-thread
@@ -25,12 +25,12 @@ endOfSimStep = function( simStep, generation)
         if(simStep < p.stepsPerGeneration / 2) then radioactiveX = p.sizeX - 1 end 
 
         for index = 1, p.population do -- // index 0 is reserved
-            local indiv = peeps[index]
+            local indiv = peeps:getIndivIndex(index)
             if (indiv.alive) then 
                 local distanceFromRadioactiveWall = math.abs(indiv.loc.x - radioactiveX)
                 if (distanceFromRadioactiveWall < p.sizeX / 2) then 
                     local chanceOfDeath = 1.0 / distanceFromRadioactiveWall
-                    if (randomUint() / RANDOM_UINT_MAX < chanceOfDeath) then
+                    if (randomUint:Get() / RANDOM_UINT_MAX < chanceOfDeath) then
                         peeps.queueForDeath(indiv)
                     end 
                 end 
@@ -42,7 +42,7 @@ endOfSimStep = function( simStep, generation)
     -- // At the end of the generation, all those with the flag true will reproduce.
     if (p.challenge == Sim.CHALLENGE_TOUCH_ANY_WALL) then
         for (index = 1, p.population do -- // index 0 is reserved
-            indiv = peeps[index]
+            indiv = peeps:getIndivIndex(index)
             if (indiv.loc.x == 0 or indiv.loc.x == p.sizeX - 1 or
                 indiv.loc.y == 0 or indiv.loc.y == p.sizeY - 1) then
                 indiv.challengeBits = true
@@ -56,7 +56,7 @@ endOfSimStep = function( simStep, generation)
     if (p.challenge == Sim.CHALLENGE_LOCATION_SEQUENCE) then
         local radius = 9.0
         for index = 1, p.population do -- // index 0 is reserved
-            indiv = peeps[index]
+            indiv = peeps:getIndivIndex(index)
             for n = 0, grid:getBarrierCenters():size() -1 do
                 local bit = bit.lshift(1, n)
                 if (bit.band(indiv.challengeBits, bit) == 0) then 

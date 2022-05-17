@@ -4,9 +4,9 @@ function table.deepcopy(orig)
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
-            copy[deepcopy(orig_key)] = deepcopy(orig_value)
+            copy[table.deepcopy(orig_key)] = table.deepcopy(orig_value)
         end
-        setmetatable(copy, deepcopy(getmetatable(orig)))
+        setmetatable(copy, table.deepcopy(getmetatable(orig)))
     else -- number, string, boolean, etc
         copy = orig
     end
@@ -28,5 +28,15 @@ function table.shallowcopy(orig)
 end
 
 function table.clone(org)
-    return {table.unpack(org)}
+    return { unpack(org) }
 end
+
+function table.count( t)
+    if(t == nil) then return 0 end 
+    if(type(t) ~= "table") then return 0 end
+    local count = 0
+    for k,v in pairs(t) do 
+        count = count + 1
+    end 
+    return count 
+end 

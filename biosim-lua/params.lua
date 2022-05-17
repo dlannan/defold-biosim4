@@ -60,7 +60,7 @@ Params = {
 
 ParamManager = {
 
-    privParams          = table.deepcopy(Params),
+    privParams          = table.shallowcopy(Params),
     configFilename      = "",
     lastModTime         = 0, -- // when config file was last read
 }
@@ -117,7 +117,8 @@ ParamManager.setDefaults = function(self)
 end
 
 ParamManager.registerConfigFile = function(self, filename) 
-    self.configFilename = filename
+    pprint(filename)
+    self.privParams.configFilename = filename
 end 
 
 ParamManager.ingestParameter = function(self, name, val)
@@ -134,23 +135,38 @@ ParamManager.ingestParameter = function(self, name, val)
 end
 
 -- Essentially merge config into params
-ParamManager.updateFromConfigFile = function(generationNumber)
+ParamManager.updateFromConfigFile = function(self, generationNumber)
     
-    local tbl = inifile.load(self.configFilename)
+    pprint(self.privParams.configFilename)
+    local tbl = inifile.load(self.privParams.configFilename)
     -- Iterate the config file and overwrite the params manager config
     for k,v in pairs(tbl.default) do 
         self.privParams[v.key] = v.value 
     end 
 end 
 
-ParamManager.checkParameters = function()
+ParamManager.checkParameters = function(self)
 end 
 
 -- // Returns a copy of params with default values overridden by the values
 -- // in the specified config file. The filename of the config file is saved
 -- // inside the params for future reference.
-paramsInit = function(argc, argv)
-
+ParamManager.paramsInit = function(self, filename)
+    local tbl = inifile.load(filename)
+    local result = {}
+    for k,v in pairs(tbl.default) do 
+        self.privParams[v.key] = v.value 
+    end 
 end
+
+local mt = {}
+mt.__index= function(t, k)
+    local privParams = t.privParams
+    if(privParams[k] ~= nil) then 
+        return t.privParams[k] 
+    end 
+    return t[k]
+end
+setmetatable(ParamManager, mt)
 
 return ParamManager

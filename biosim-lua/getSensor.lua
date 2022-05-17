@@ -1,5 +1,5 @@
 
-require("basicTypes")
+require("biosim-lua.basicTypes")
 
 getPopulationDensityAlongAxis = function( loc, dir)
 
