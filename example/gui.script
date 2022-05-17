@@ -276,7 +276,7 @@ function update(self, dt)
 	if changed then	
 		self.paused = checked	
 		if(self.paused == true) then self.mode = 2 else self.mode = 1 end 
-		biosim.SimulationMode( self.mode )
+		-- biosim.SimulationMode( self.mode )
 	end
 
 	imgui.separator()
