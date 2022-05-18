@@ -46,7 +46,7 @@ jaro_winkler_distance = function(genome1, genome2)
     -- /* calculate matching characters */
     for i = 0, al-1 do
         local l = math.min(i + range + 1, sl)
-        for j = math.max(i - range, 0), l-1) do
+        for j = math.max(i - range, 0), l-1 do
             if (genesMatch(a[i], s[j]) and not sflags[j]) then
                 sflags[j] = 1
                 aflags[i] = 1
@@ -86,18 +86,18 @@ hammingDistanceBits = function(genome1, genome2)
 
     assert(#genome1 == #genome2)
 
-    local p1 = genome1.data()
-    local p2 = genome2.data()
+    local p1 = genome1
+    local p2 = genome2
+
     local numElements = #genome1
-    local bytesPerElement = sizeof(genome1[0])
+    local bytesPerElement = 4
     local lengthBytes = numElements * bytesPerElement
     local lengthBits = lengthBytes * 8
     local bitCount = 0
 
-    for index = 0, #genome1 do 
-        bitCount = bitCount + bit.bxor(p1, p2)
-        p1 = p1 + 1
-        p2 = p2 + 1
+    for index = 1, #genome1 do 
+        -- print(p1[index]:GetData(), p2[index]:GetData())
+        bitCount = bitCount + bit.bxor(p1[index]:GetData(), p2[index]:GetData())
     end
 
     -- // For two completely random bit patterns, about half the bits will differ,
@@ -114,9 +114,9 @@ genomeSimilarity = function(g1, g2)
 
     if(p.genomeComparisonMethod == 0) then 
         return jaro_winkler_distance(g1, g2);
-    elseif(p.genomeComparisonMethod == 1) then )
+    elseif(p.genomeComparisonMethod == 1) then 
         return hammingDistanceBits(g1, g2)
-    elseif(p.genomeComparisonMethod == 2) then )
+    elseif(p.genomeComparisonMethod == 2) then 
         return hammingDistanceBytes(g1, g2)
     else
         assert(false)
@@ -131,7 +131,7 @@ geneticDiversity = function()
     if (p.population < 2) then return 0.0 end
 
     -- // count limits the number of genomes sampled for performance reasons.
-    local count = math.min(1000U, p.population) --    // todo: !!! p.analysisSampleSize;
+    local count = math.min(1000, p.population) --    // todo: !!! p.analysisSampleSize;
     local numSamples = 0
     local similaritySum = 0.0
 
@@ -139,7 +139,7 @@ geneticDiversity = function()
         local index0 = randomUint:GetRange(1, p.population - 1) -- // skip first and last elements
         local index1 = index0 + 1
         similaritySum = similaritySum + genomeSimilarity(peeps:getIndivIndex(index0).genome, peeps:getIndivIndex(index1).genome)
-        --count;
+        count = count - 1
         numSamples = numSamples + 1
     end
     local diversity = 1.0 - (similaritySum / numSamples)

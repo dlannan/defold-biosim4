@@ -19,15 +19,6 @@ Indiv = {
     challengeBits = 0,          -- // modified when the indiv accomplishes some task
 }
 
-Indiv.feedForward = function(self, simStep) -- // reads sensors, returns actions
-end
-
-Indiv.getSensor = function(self, Sensor, simStep)
-end 
-
-Indiv.createWiringFromGenome = function(self) -- // creates .nnet member from .genome member
-end
-
 Indiv.initialize = function(self, index, loc, genome)
 
     self.index = index
@@ -48,15 +39,6 @@ end
 
 Indiv.printNeuralNet = function(self)
 end 
-
-Indiv.printIGraphEdgeList = function(self)
-end
-
-Indiv.printGenome = function(self)
-end
-
-Indiv.getIGraphEdgeList = function(self, lines)
-end
 
 -- /********************************************************************************
 -- This function does a neural net feed-forward operation, from sensor (input) neurons
@@ -111,14 +93,14 @@ Indiv.feedForward = function(self, simStep)
     -- // transfer function will leave each neuron's output in the range -1.0..1.0.
 
     local neuronOutputsComputed = false
-    for k, conn in pairs(nnet.connections) do
+    for k, conn in pairs(self.nnet.connections) do
         if (conn.sinkType == ACTION and not neuronOutputsComputed) then 
             -- // We've handled all the connections from sensors and now we are about to
             -- // start on the connections to the action outputs, so now it's time to
             -- // update and latch all the neuron outputs to their proper range (-1.0..1.0)
             for neuronIndex = 0, #nnet.neurons -1 do
-                if (nnet.neurons[neuronIndex].driven) then
-                    nnet.neurons[neuronIndex].output = math.tanh(neuronAccumulators[neuronIndex])
+                if (self.nnet.neurons[neuronIndex].driven) then
+                    self.nnet.neurons[neuronIndex].output = math.tanh(neuronAccumulators[neuronIndex])
                 end 
             end 
             neuronOutputsComputed = true
@@ -130,7 +112,7 @@ Indiv.feedForward = function(self, simStep)
         if (conn.sourceType == SENSOR) then 
             inputVal = self:getSensor(conn.sourceNum, simStep)
         else 
-            inputVal = nnet.neurons[conn.sourceNum].output
+            inputVal = self.nnet.neurons[conn.sourceNum].output
         end
 
         -- // Weight the connection's value and add to neuron accumulator or action accumulator.
@@ -147,68 +129,68 @@ Indiv.feedForward = function(self, simStep)
 end
 
 local sensorNumFunc = {
-    [Sensor.AGE] = function()
+    [Sensor.AGE]= function(self)
     -- // Converts age (units of simSteps compared to life expectancy)
     -- // linearly to normalized sensor range 0.0..1.0
-        return age / p.stepsPerGeneration
+        return self.age / p.stepsPerGeneration
     end,
-    [Sensor.BOUNDARY_DIST] = function()   
+    [Sensor.BOUNDARY_DIST] = function(self)   
     -- // Finds closest boundary, compares that to the max possible dist
     -- // to a boundary from the center, and converts that linearly to the
     -- // sensor range 0.0..1.0
-        local distX = math.min(loc.x, (p.sizeX - loc.x) - 1)
-        local distY = math.min(loc.y, (p.sizeY - loc.y) - 1)
+        local distX = math.min(self.loc.x, (p.sizeX - self.loc.x) - 1)
+        local distY = math.min(self.loc.y, (p.sizeY - self.loc.y) - 1)
         local closest = math.min(distX, distY)
         local maxPossible = math.max(p.sizeX / 2 - 1, p.sizeY / 2 - 1)
         return closest / maxPossible
     end,
 
-    [Sensor.BOUNDARY_DIST_X] = function()   
+    [Sensor.BOUNDARY_DIST_X] = function(self)   
     -- // Measures the distance to nearest boundary in the east-west axis,
     -- // max distance is half the grid width; scaled to sensor range 0.0..1.0.
-        local minDistX = math.min(loc.x, (p.sizeX - loc.x) - 1)
+        local minDistX = math.min(self.loc.x, (p.sizeX - self.loc.x) - 1)
         return minDistX / (p.sizeX / 2.0)
     end,
 
-    [Sensor.BOUNDARY_DIST_Y] = function()
+    [Sensor.BOUNDARY_DIST_Y]= function(self)
     -- // Measures the distance to nearest boundary in the south-north axis,
     -- // max distance is half the grid height; scaled to sensor range 0.0..1.0.
-        local minDistY = math.min(loc.y, (p.sizeY - loc.y) - 1)
+        local minDistY = math.min(self.loc.y, (p.sizeY - self.loc.y) - 1)
         return minDistY / (p.sizeY / 2.0)
     end,
 
-    [Sensor.LAST_MOVE_DIR_X] = function()   
+    [Sensor.LAST_MOVE_DIR_X]= function(self)   
     -- // X component -1,0,1 maps to sensor values 0.0, 0.5, 1.0
-        local lastX = lastMoveDir:asNormalizedCoord().x
+        local lastX = self.lastMoveDir:asNormalizedCoord().x
         local val = 1.0 
         if(lastX == -1) then val = 0.0 end 
-        sensorVal = val 
+        local sensorVal = val 
         if(lastX == 0) then sensorVal = 0.5 end 
         return sensorVal 
     
     end,
 
-    [Sensor.LAST_MOVE_DIR_Y] = function()   
+    [Sensor.LAST_MOVE_DIR_Y]= function(self)   
         -- // Y component -1,0,1 maps to sensor values 0.0, 0.5, 1.0
-        local lastY = lastMoveDir:asNormalizedCoord().y
+        local lastY = self.lastMoveDir:asNormalizedCoord().y
         local val = 1.0 
         if(lastY == -1) then val = 0.0 end 
-        sensorVal = val 
+        local sensorVal = val 
         if(lastY == 0) then sensorVal = 0.5 end 
         return sensorVal 
     end,
 
-    [Sensor.LOC_X] = function()
+    [Sensor.LOC_X]= function(self)
         -- // Maps current X location 0..p.sizeX-1 to sensor range 0.0..1.0
-        return loc.x / (p.sizeX - 1)
+        return self.loc.x / (p.sizeX - 1)
     end,
 
-    [Sensor.LOC_Y] = function()
+    [Sensor.LOC_Y]= function(self)
         -- // Maps current Y location 0..p.sizeY-1 to sensor range 0.0..1.0
-        return loc.y / (p.sizeY - 1)
+        return self.loc.y / (p.sizeY - 1)
     end,
 
-    [Sensor.OSC1] = function()
+    [Sensor.OSC1]= function(self)
         -- // Maps the oscillator sine wave to sensor range 0.0..1.0;
         -- // cycles starts at simStep 0 for everbody.
         local phase = (simStep % oscPeriod) / oscPeriod -- // 0.0..1.0
@@ -216,31 +198,31 @@ local sensorNumFunc = {
         assert(factor >= -1.0 and factor <= 1.0)
         factor = factor + 1.0   --  // convert to 0.0..2.0
         factor = factor / 2.0   --  // convert to 0.0..1.0
-        sensorVal = factor
+        local sensorVal = factor
         -- // Clip any round-off error
         return math.min(1.0, math.max(0.0, sensorVal))
     end,
 
-    [Sensor.LONGPROBE_POP_FWD] = function()   
+    [Sensor.LONGPROBE_POP_FWD]= function(self)   
         -- // Measures the distance to the nearest other individual in the
         -- // forward direction. If non found, returns the maximum sensor value.
         -- // Maps the result to the sensor range 0.0..1.0.
-        return longProbePopulationFwd(loc, lastMoveDir, longProbeDist) / longProbeDist -- // 0..1
+        return longProbePopulationFwd(self.loc, self.lastMoveDir, self.longProbeDist) / self.longProbeDist -- // 0..1
     end,
 
-    [Sensor.LONGPROBE_BAR_FWD] = function()
+    [Sensor.LONGPROBE_BAR_FWD]= function(self)
         -- // Measures the distance to the nearest barrier in the forward
         -- // direction. If non found, returns the maximum sensor value.
         -- // Maps the result to the sensor range 0.0..1.0.
-        return longProbeBarrierFwd(loc, lastMoveDir, longProbeDist) / longProbeDist -- // 0..1
+        return longProbeBarrierFwd(self.loc, self.lastMoveDir, self.longProbeDist) / self.longProbeDist -- // 0..1
     end,
 
-    [Sensor.POPULATION] = function()   
+    [Sensor.POPULATION]= function(self)   
         -- // Returns population density in neighborhood converted linearly from
         -- // 0..100% to sensor range
         local countLocs = 0
         local countOccupied = 0
-        local center = loc
+        local center = self.loc
 
         local f = function(tloc) 
             countLocs = countLocs + 1
@@ -253,79 +235,78 @@ local sensorNumFunc = {
         return countOccupied / countLocs
     end,
 
-    [Sensor.POPULATION_FWD] = function()
+    [Sensor.POPULATION_FWD]= function(self)
         -- // Sense population density along axis of last movement direction, mapped
         -- // to sensor range 0.0..1.0
-        return getPopulationDensityAlongAxis(loc, lastMoveDir)
+        return getPopulationDensityAlongAxis(self.loc, self.lastMoveDir)
     end, 
 
-    [Sensor.POPULATION_LR] = function()
+    [Sensor.POPULATION_LR]= function(self)
         -- // Sense population density along an axis 90 degrees from last movement direction
-        return getPopulationDensityAlongAxis(loc, lastMoveDir:rotate90DegCW())
+        return getPopulationDensityAlongAxis(self.loc, self.lastMoveDir:rotate90DegCW())
     end, 
 
-    [Sensor.BARRIER_FWD] = function()
+    [Sensor.BARRIER_FWD]= function(self)
         -- // Sense the nearest barrier along axis of last movement direction, mapped
         -- // to sensor range 0.0..1.0
-        return getShortProbeBarrierDistance(loc, lastMoveDir, p.shortProbeBarrierDistance)
+        return getShortProbeBarrierDistance(self.loc, self.lastMoveDir, p.shortProbeBarrierDistance)
     end, 
 
-    [Sensor.BARRIER_LR] = function()
+    [Sensor.BARRIER_LR]= function(self)
         -- // Sense the nearest barrier along axis perpendicular to last movement direction, mapped
         -- // to sensor range 0.0..1.0
-        return getShortProbeBarrierDistance(loc, lastMoveDir:rotate90DegCW(), p.shortProbeBarrierDistance)
+        return getShortProbeBarrierDistance(self.loc, self.lastMoveDir:rotate90DegCW(), p.shortProbeBarrierDistance)
     end, 
 
-    [Sensor.RANDOM] = function()
+    [Sensor.RANDOM]= function(self)
         -- // Returns a random sensor value in the range 0.0..1.0.
         return randomUint:Get() / UINT_MAX
     end, 
 
-    [Sensor.SIGNAL0] = function()
+    [Sensor.SIGNAL0]= function(self)
         -- // Returns magnitude of signal0 in the local neighborhood, with
         -- // 0.0..maxSignalSum converted to sensorRange 0.0..1.0
-        return getSignalDensity(0, loc)
+        return getSignalDensity(0, self.loc)
     end,
 
-    [Sensor.SIGNAL0_FWD] = function()
+    [Sensor.SIGNAL0_FWD]= function(self)
         -- // Sense signal0 density along axis of last movement direction
-        return getSignalDensityAlongAxis(0, loc, lastMoveDir)
+        return getSignalDensityAlongAxis(0, self.loc, self.lastMoveDir)
     end,
 
-    [Sensor.SIGNAL0_LR] = function()
+    [Sensor.SIGNAL0_LR]= function(self)
         -- // Sense signal0 density along an axis perpendicular to last movement direction
-        getSignalDensityAlongAxis(0, loc, lastMoveDir:rotate90DegCW())
+        return getSignalDensityAlongAxis(0, self.loc, self.lastMoveDir:rotate90DegCW())
     end, 
 
-    [Sensor.GENETIC_SIM_FWD] = function()
+    [Sensor.GENETIC_SIM_FWD]= function(self)
         -- // Return minimum sensor value if nobody is alive in the forward adjacent location,
         -- // else returns a similarity match in the sensor range 0.0..1.0
-        local loc2 = loc:ADD(lastMoveDir)
+        local loc2 = loc:ADD(self.lastMoveDir)
         if (grid:isInBounds(loc2) and grid:isOccupiedAt(loc2)) then
             local indiv2 = peeps:getIndiv(loc2)
             if (indiv2.alive) then
-                return genomeSimilarity(genome, indiv2.genome) -- // 0.0..1.0
+                return genomeSimilarity(self.genome, indiv2.genome) -- // 0.0..1.0
             end 
         end
-        return sensorVal
+        return 0.0
     end,
 }
 
 -- // Returned sensor values range SENSOR_MIN..SENSOR_MAX
-Indiv.getSensor = function(sensorNum, simStep) 
+Indiv.getSensor = function(self, sensorNum, simStep) 
 
     local sensorVal = 0.0
 
-    local newVal = sensorNumFunc[sensorNum]
+    local newVal = sensorNumFunc[sensorNum](self)
     if(newVal == nil) then print("Invalid sensor number: "..tostring(sensorNum)) end
     sensorVal = newVal    
-
-    if (math.isnan(sensorVal) or sensorVal < -0.01 or sensorVal > 1.01) then
+    if (sensorVal == "nan" or sensorVal < -0.01 or sensorVal > 1.01) then
         -- // std::cout << "sensorVal=" << (int)sensorVal << " for " << sensorName((Sensor)sensorNum) << std::endl;
         sensorVal = math.max(0.0, math.min(sensorVal, 1.0)) -- // clip
     end 
 
-    assert(not math.isnan(sensorVal) and sensorVal >= -0.01 and sensorVal <= 1.01)
+    assert(not (sensorVal == "nan") and sensorVal >= -0.01 and sensorVal <= 1.01)
     return sensorVal
 end
 

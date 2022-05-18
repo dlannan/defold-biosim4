@@ -65,6 +65,7 @@ local function startSim(self)
 	self.survived = 0
 	self.survival_hist = {}
 	self.diversity_hist = {}
+	self.mode = RunMode.PAUSE
 
 	self.agent = { id = 0, r = 255, g = 255, b = 255 }
 end
@@ -252,6 +253,8 @@ end
 
 function update(self, dt)
 
+	sim.simulationStep()
+
 	imgui.set_next_window_pos( 5, 5 )
 	imgui.set_next_window_size(330 * WINDOW_SCALE, 630 * WINDOW_SCALE)
 	
@@ -276,7 +279,7 @@ function update(self, dt)
 	if changed then	
 		self.paused = checked	
 		if(self.paused == true) then self.mode = 2 else self.mode = 1 end 
-		-- biosim.SimulationMode( self.mode )
+		sim.simulationMode( self.mode )
 	end
 
 	imgui.separator()
@@ -313,9 +316,10 @@ function update(self, dt)
 	--	local count = biosim.SimulationStep(agents, genstats)
 	genstats = { 0, 0, 0 }
 
-	generation = genstats[1]
-	survivors = genstats[2]
-	diversity = genstats[3]
+	-- generation = genstats[1]
+	-- survivors = genstats[2]
+	diversity = geneticDiversity()
+	print(generation, survivors, diversity)
 
 	-- Process previous generation
 	if(self.generation ~= generation) then 
@@ -373,13 +377,12 @@ function update(self, dt)
 		local points = {}
 		local names = {}
 		local joins = {}
-		self.agent = { id = 0, r = 255, b = 255, g = 255 }
-		local xscale = 513 / (596 * WINDOW_SCALE)
-		local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
-		local yscale = 512 / (596 * WINDOW_SCALE)
-		local posy = 512 - (self.mouse.y * yscale - 20)
+		-- local xscale = 513 / (596 * WINDOW_SCALE)
+		-- local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
+		-- local yscale = 512 / (596 * WINDOW_SCALE)
+		-- local posy = 512 - (self.mouse.y * yscale - 20)
 		print(posy, self.mouse.y, yscale)
---		biosim.GetAgent( posx, posy, points, names, self.agent, joins, 300, 80.0 )
+--		biosim.GetAgent( linedata, points, names, joins, 300, 80.0 )
 		--pprint(joins)
 		drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
 		self.agent.nodes = points 

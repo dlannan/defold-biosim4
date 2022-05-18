@@ -12,12 +12,12 @@ local Column = {
     zeroFill = function(self) 
         for k,v in pairs(self.data) do v = 0 end
     end,
-    data = { 0 },
+    data = {},
 }
 
 Column.new = function(numRows) 
     local col = table.shallowcopy(Column) 
-    for i = 1, numRows do col.data[i-1] = 0 end 
+    for i = 0, numRows do col.data[i] = 0 end 
     return col
 end
 
@@ -32,10 +32,11 @@ local Layer = {
     end,
     data = {}
 }
+
 Layer.new = function(numCols, numRows) 
     local layer = table.shallowcopy(Layer)
-    for i = 1, numCols do 
-        tinsert(layer.data, Column.new(numRows)) 
+    for i = 0, numCols do 
+        layer.data[i] = Column.new(numRows)
     end
     return layer
 end
@@ -46,8 +47,8 @@ Signals = {
 
 Signals.init = function(self, numLayers, sizeX, sizeY)
 
-    for n = 1, numLayers do 
-        tinsert(self.data, Layer.new(sizeX, sizeY))
+    for n = 0, numLayers do 
+        self.data[n] =  Layer.new(sizeX, sizeY)
     end
 end 
 
@@ -56,7 +57,8 @@ Signals.Get = function(self, layerNum)
 end 
 
 Signals.getMagnitude = function(self, layerNum, loc) 
-    return self.data[layerNum][loc.x][loc.y] 
+    pprint(layerNum, loc.x, loc.y)
+    return self.data[layerNum].data[loc.x].data[loc.y] 
 end
 
 -- // Increases the specified location by centerIncreaseAmount,
@@ -70,9 +72,9 @@ Signals.increment = function(self, layerNum, loc)
     local neighborIncreaseAmount = 1
 
     local lfunc = function(loc) 
-        if (signals[layerNum][loc.x][loc.y] < SIGNAL_MAX) then 
-            signals[layerNum][loc.x][loc.y] =
-                math.min(SIGNAL_MAX, signals[layerNum][loc.x][loc.y] + neighborIncreaseAmount)
+        if (self.data[layerNum][loc.x][loc.y] < SIGNAL_MAX) then 
+            self.data[layerNum][loc.x][loc.y] =
+            math.min(SIGNAL_MAX, self.data[layerNum][loc.x][loc.y] + neighborIncreaseAmount)
         end
     end
 

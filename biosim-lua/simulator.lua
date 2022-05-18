@@ -93,12 +93,14 @@ end
 
 diversity   = 0.0
 murderCount = 0
+generation  = 0
+survivors   = 0
 
 local DoSimStep = function( _ctx )
 
-    randomUint:initialize() -- // seed the RNG, each thread has a private instance
+    -- randomUint:initialize() -- // seed the RNG, each thread has a private instance
 
-    while(generation < p.maxGenerations) do -- // generation loop
+    if(generation < p.maxGenerations) then -- // generation loop
 
         if(runMode == RunMode.RUN) then 
             murderCount = 0 -- // for reporting purposes
@@ -116,10 +118,11 @@ local DoSimStep = function( _ctx )
                 -- // updates signal layers (pheromone), etc.
                 murderCount = murderCount + peeps.deathQueueSize()
                 endOfSimStep(simStep, generation)
+                print(murderCount)
             end
 
             endOfGeneration(generation)
-            paramManager.updateFromConfigFile(generation + 1)
+            p:updateFromConfigFile(generation + 1)
             local numberSurvivors = spawnNewGeneration(generation, murderCount)
             -- // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
             -- //     displaySampleGenomes(p.displaySampleGenomes)
@@ -132,9 +135,9 @@ local DoSimStep = function( _ctx )
             end
         end
 
-        if(runMode == RunMode.STOP or runMode == RunMode.ABORT) then
-            break
-        end 
+        -- if(runMode == RunMode.STOP or runMode == RunMode.ABORT) then
+        --     break
+        -- end 
     end 
 end 
 
@@ -173,6 +176,7 @@ Sim.simulator = function(self, filename)
 end 
 
 Sim.simulationStep = function( void )
+    DoSimStep()
 end 
 
 Sim.simulationDone = function( void )

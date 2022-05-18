@@ -22,6 +22,18 @@ Gene = {
     -- //float weightAsFloat() { return std::pow(weight / f1, 3.0) / f2; }
     weightAsFloat = function(self)  return self.weight / 8192.0 end,
     makeRandomWeight = function(self) return randomUint:GetRange(0, 0xffff) - 0x8000 end,
+
+    -- // Make an int out of the 5 main components.
+    GetData = function(self)
+
+        if(self.data == nil) then 
+            local r1 = bit.bor(bit.band(self.sourceType, 1), bit.lshift(bit.band(self.sourceNum, 0x7fff), 1) )
+            local r2 = bit.bor(bit.band(self.sinkType, 1), bit.lshift(bit.band(self.sinkNum, 0x7fff), 1) )
+            local out = r1 + bit.lshift(r2, 8) --  + bit.lshift(self.weight, 16)
+            self.data = out
+        end 
+        return self.data 
+    end,
 }
 
 Gene.new = function()

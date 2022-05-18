@@ -21,7 +21,7 @@ getPopulationDensityAlongAxis = function( loc, dir)
     local dirVecX = dirVec.x / len
     local dirVecY = dirVec.y / len -- // Unit vector components along dir
 
-    local f = function(tloc) then
+    local f = function(tloc) 
         if (tloc:NEQ(loc) and grid:isOccupiedAt(tloc)) then
             local offset = tloc:SUB(loc)
             local proj = dirVecX * offset.x + dirVecY * offset.y -- // Magnitude of projection along dir
@@ -89,12 +89,12 @@ getSignalDensity = function(layerNum, loc)
     sum = 0
     center = loc
 
-    auto f = function(tloc) 
+    local Locfunc = function(tloc) 
         countLocs = countLocs + 1
         sum = sum + signals:getMagnitude(layerNum, tloc)
     end 
 
-    visitNeighborhood(center, p.signalSensorRadius, f)
+    visitNeighborhood(center, p.signalSensorRadius, Locfunc)
     maxSum = countLocs * SIGNAL_MAX
     sensorVal = sum / maxSum -- // convert to 0.0..1.0
 
@@ -120,7 +120,7 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
     local dirVecX = dirVec.x / len
     local dirVecY = dirVec.y / len -- // Unit vector components along dir
 
-    auto f = function(tloc) 
+    local f = function(tloc) 
         if (tloc ~= loc) then
             local offset = tloc:SUB(loc)
             local proj = (dirVecX * offset.x + dirVecY * offset.y) -- // Magnitude of projection along dir

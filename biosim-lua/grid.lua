@@ -119,7 +119,7 @@ Grid.GetColumn = function(self, columnXNum) return self.data[columnXNum] end
 -- // This is a utility function used when inspecting a local neighborhood around
 -- // some location. This function feeds each valid (in-bounds) location in the specified
 -- // neighborhood to the specified function. Locations include self (center of the neighborhood).
-visitNeighborhood = function(loc, radius, f)
+visitNeighborhood = function(loc, radius, Locfunc)
 
     for  dx = math.min(radius, loc.x), math.min(radius, (p.sizeX - loc.x) - 1) do
         local x = loc.x + dx
@@ -128,7 +128,7 @@ visitNeighborhood = function(loc, radius, f)
         for dy = -math.min(extentY, loc.y), math.min(extentY, (p.sizeY - loc.y) - 1) do
             local y = loc.y + dy
             assert(y >= 0 and y < p.sizeY)
-            f( Coord.new( x, y ) )
+            Locfunc( Coord.new( x, y ) )
         end
     end
 end

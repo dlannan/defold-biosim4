@@ -30,7 +30,6 @@ local C = Compass.CENTER
 -- // for the difference between two locations.
 
 local Coord = {
-    new = function(x0, y0) return { x=0; y=0 } end,
     x = 0,
     y = 0,
 }
@@ -67,8 +66,8 @@ end
 
 Coord.EQ = function(self, c) return self.x == c.x and self.y == c.y end
 Coord.NEQ = function(self, c) return self.x ~= c.x or self.y ~= c.y end
-Coord.ADD = function(self, c) return self:new((self.x + c.x), (self.y + c.y)) end
-Coord.SUB = function(self, c) return self:new((self.x - c.x), (self.y - c.y)) end
+Coord.ADD = function(self, c) return self:new((self.x + c), (self.y + c)) end
+Coord.SUB = function(self, c) return self:new((self.x - c), (self.y - c)) end
 Coord.MUL = function(self, a) return self:new((self.x * a), (self.y * a)) end
 Coord.ADDDir = function(self, d) return self:ADD(d:asNormalizedCoord()) end
 Coord.SUBDir = function(self, d) return self:SUB(d:asNormalizedCoord()) end
@@ -81,8 +80,13 @@ Coord.raySameness = function(self, other)
 
     return (self.x * other.x + self.y * other.y) / math.sqrt(mag)
 end -- // returns -1.0 (opposite) .. 1.0 (same)
+
 Coord.raySamenessDir = function(self, d) 
     return self:raySameness(d:asNormalizedCoord())
 end -- // returns -1.0 (opposite) .. 1.0 (same)
+
+Coord.new = function(x0, y0) 
+    return table.shallowcopy(Coord)
+end
 
 return Coord

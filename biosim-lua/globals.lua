@@ -2,6 +2,10 @@
 -- These are global tables. 
 -- TODO: Make this a little more friendly
 
+SIGNAL_MIN  = 0
+SIGNAL_MAX  = 255
+UINT_MAX    = 4294967295
+
 randomUint = require("biosim-lua.random")
 
 require("biosim-lua.sensor-actions")
@@ -28,3 +32,5 @@ p = paramManager
 require("biosim-lua.analysis")
 require("biosim-lua.spawnNewGeneration")
 require("biosim-lua.genome-neurons")
+require("biosim-lua.genome-compare")
+require("biosim-lua.getSensor")
