@@ -57,7 +57,6 @@ Signals.Get = function(self, layerNum)
 end 
 
 Signals.getMagnitude = function(self, layerNum, loc) 
-    pprint(layerNum, loc.x, loc.y)
     return self.data[layerNum].data[loc.x].data[loc.y] 
 end
 

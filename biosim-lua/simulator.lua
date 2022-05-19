@@ -95,6 +95,7 @@ diversity   = 0.0
 murderCount = 0
 generation  = 0
 survivors   = 0
+simStep     = 0
 
 local DoSimStep = function( _ctx )
 
@@ -155,7 +156,6 @@ Sim.simulator = function(self, filename)
 
     -- // Allocate container space. Once allocated, these container elements
     -- // will be reused in each new generation.
-    pprint(p.sizeX, p.sizeY)
     grid:init(p.sizeX, p.sizeY)         -- // the land on which the peeps live
     signals:init(p.signalLayers, p.sizeX, p.sizeY)  -- // where the pheromones waft
     peeps:init(p.population)            -- // the peeps themselves

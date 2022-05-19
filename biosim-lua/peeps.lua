@@ -60,7 +60,7 @@ end
 -- // to the same location; only the first one will actually get moved.
 Peeps.queueForMove = function(self, indiv, newLoc)
     assert(indiv.alive)
-    tinsert(moveQueue, { indiv.index, Coord.new(newLoc) })
+    tinsert(self.moveQueue, { indiv.index, Coord.new(newLoc) })
 end 
 
 -- // Called in single-thread mode at end of sim step. This executes all the
@@ -73,7 +73,7 @@ Peeps.drainMoveQueue = function(self)
         local indiv = peeps:getIndivIndex(k)
         if (indiv.alive) then 
             local newLoc = moveRecord
-            local moveDir = (newLoc:SUB(indiv.loc)):asDir()
+            local moveDir = newLoc:SUBCOORD(indiv.loc):asDir()
             if (grid:isEmptyAt(newLoc)) then
                 grid:set(indiv.loc, 0)
                 grid:set(newLoc, indiv.index)

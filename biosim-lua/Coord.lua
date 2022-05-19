@@ -66,11 +66,13 @@ end
 
 Coord.EQ = function(self, c) return self.x == c.x and self.y == c.y end
 Coord.NEQ = function(self, c) return self.x ~= c.x or self.y ~= c.y end
-Coord.ADD = function(self, c) return self:new((self.x + c), (self.y + c)) end
-Coord.SUB = function(self, c) return self:new((self.x - c), (self.y - c)) end
-Coord.MUL = function(self, a) return self:new((self.x * a), (self.y * a)) end
-Coord.ADDDir = function(self, d) return self:ADD(d:asNormalizedCoord()) end
-Coord.SUBDir = function(self, d) return self:SUB(d:asNormalizedCoord()) end
+Coord.ADD = function(self, c) return Coord.new((self.x + c), (self.y + c)) end
+Coord.ADDCOORD = function(self, c) return Coord.new((self.x + c.x), (self.y + c.y)) end
+Coord.SUB = function(self, c) return Coord.new((self.x - c), (self.y - c)) end
+Coord.SUBCOORD = function(self, c) return Coord.new((self.x - c.x), (self.y - c.y)) end
+Coord.MUL = function(self, a) return Coord.new((self.x * a), (self.y * a)) end
+Coord.ADDDIR = function(self, d) return self:ADDCOORD(d:asNormalizedCoord()) end
+Coord.SUBDIR = function(self, d) return self:SUBCOORD(d:asNormalizedCoord()) end
 
 Coord.raySameness = function(self, other) 
     local mag = (self.x * self.x + self.y * self.y) * (other.x * other.x + other.y * other.y)
@@ -86,7 +88,10 @@ Coord.raySamenessDir = function(self, d)
 end -- // returns -1.0 (opposite) .. 1.0 (same)
 
 Coord.new = function(x0, y0) 
-    return table.shallowcopy(Coord)
+    local c = table.shallowcopy(Coord)
+    c.x = x0
+    c.y = y0
+    return c
 end
 
 return Coord

@@ -33,7 +33,7 @@ local Column = {
 
 Column.new = function(numRows) 
     local col = table.shallowcopy(Column) 
-    for i = 1, numRows do col.data[i-1] = 0 end 
+    for i = 0, numRows do col.data[i-1] = 0 end 
     return col
 end
 
@@ -57,11 +57,17 @@ Grid.zeroFill = function(self)
     end 
 end
 
-Grid.sizeX = function(self) return #self.data end
-Grid.sizeY = function(self) return #self.data[1] end
+Grid.sizeX = function(self) 
+    return table.count(self.data) 
+end
 
-Grid.at = function(self, loc) return 
-    self.data[loc.x][loc.y] 
+Grid.sizeY = function(self) 
+    return table.count(self.data[1]) 
+end
+
+Grid.at = function(self, loc)  
+    pprint(loc.x, loc.y)
+    return self.data[loc.x][loc.y] 
 end 
 
 Grid.atXY = function(self, x, y) 
@@ -124,10 +130,12 @@ visitNeighborhood = function(loc, radius, Locfunc)
     for  dx = math.min(radius, loc.x), math.min(radius, (p.sizeX - loc.x) - 1) do
         local x = loc.x + dx
         assert(x >= 0 and x < p.sizeX)
-        local extentY = math.floor(math.sqrt(radius * radius - dx * dx) + 0.5)
+        local extentY = math.floor(math.sqrt(radius * radius - dx * dx))
         for dy = -math.min(extentY, loc.y), math.min(extentY, (p.sizeY - loc.y) - 1) do
             local y = loc.y + dy
             assert(y >= 0 and y < p.sizeY)
+            x = math.floor(x)
+            y = math.floor(y)
             Locfunc( Coord.new( x, y ) )
         end
     end

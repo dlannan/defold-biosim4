@@ -99,7 +99,7 @@ Genome = {}
 -- // assigned sequentially starting at 0.
 
 
-local NeuralNet = 
+NeuralNet = 
 {
     connections  = {},      -- // connections are equivalent to genes
 
@@ -109,6 +109,10 @@ local NeuralNet =
     },
     neurons = {},
 }
+
+NeuralNet.new = function()
+    return table.shallowcopy(NeuralNet)
+end
 
 -- // When a new population is generated and every individual is given a
 -- // neural net, the neuron outputs must be initialized to something:

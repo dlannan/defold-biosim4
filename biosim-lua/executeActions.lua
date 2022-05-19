@@ -1,4 +1,5 @@
 
+local Coord = require("biosim-lua.Coord")
 require("biosim-lua.sensor-actions")
 
 -- // Given a factor in the range 0.0..1.0, return a bool with the
@@ -8,7 +9,8 @@ require("biosim-lua.sensor-actions")
 local prob2bool = function(factor)
 
     assert(factor >= 0.0 and factor <= 1.0)
-    return (randomUint:Get() / RANDOM_UINT_MAX) < factor
+    if( ( randomUint:Get() / RANDOM_UINT_MAX) < factor) then return 1 end 
+    return 0
 end
 
 
@@ -16,47 +18,47 @@ end
 -- // exponential curve. The steepness of the curve is determined by the K factor
 -- // which is a small positive integer. This tends to reduce the activity level
 -- // a bit (makes the peeps less reactive and jittery).
-local responseCurve = function(float r)
+local responseCurve = function(r)
 
     local k = p.responsivenessCurveKFactor
     return math.pow((r - 2.0), -2.0 * k) - math.pow(2.0, -2.0 * k) * (1.0 - r)
 end 
 
 
-/**********************************************************************************
-Action levels are driven by sensors or internal neurons as connected by an agent's
-neural net brain. Each agent's neural net is reevaluated once each simulator
-step (simStep). After evaluating the action neuron outputs, this function is
-called to execute the actions according to their output levels. This function is
-called in multi-threaded mode and operates on a single individual while other
-threads are doing to the same to other individuals.
+-- /**********************************************************************************
+-- Action levels are driven by sensors or internal neurons as connected by an agent's
+-- neural net brain. Each agent's neural net is reevaluated once each simulator
+-- step (simStep). After evaluating the action neuron outputs, this function is
+-- called to execute the actions according to their output levels. This function is
+-- called in multi-threaded mode and operates on a single individual while other
+-- threads are doing to the same to other individuals.
+-- 
+-- Action (their output) values arrive here as floating point values of arbitrary
+-- range (because they are the raw sums of zero or more weighted inputs) and will
+-- eventually be converted in this function to a probability 0.0..1.0 of actually
+-- getting executed.
+-- 
+-- For the various possible action neurons, if they are driven by a sufficiently
+-- strong level, we do this:
+-- 
+--     MOVE_* actions- queue our agent for deferred movement with peeps.queueForMove(); the
+--          queue will be executed at the end of the multithreaded loop in a single thread.
+--     SET_RESPONSIVENESS action - immediately change indiv.responsiveness to the action
+--          level scaled to 0.0..1.0 (because we have exclusive access to this member in
+--          our own individual during this function)
+--     SET_OSCILLATOR_PERIOD action - immediately change our individual's indiv.oscPeriod
+--          to the action level exponentially scaled to 2..2048 (TBD)
+--     EMIT_SIGNALn action(s) - immediately increment the signal level at our agent's
+--          location using signals.increment() (using a thread-safe call)
+--     KILL_FORWARD action - queue the other agent for deferred death with
+--          peeps.queueForDeath()
+-- 
+-- The deferred movement and death queues will be emptied by the caller at the end of the
+-- simulator step by endOfSimStep() in a single thread after all individuals have been
+-- evaluated multithreadedly.
+-- **********************************************************************************/
 
-Action (their output) values arrive here as floating point values of arbitrary
-range (because they are the raw sums of zero or more weighted inputs) and will
-eventually be converted in this function to a probability 0.0..1.0 of actually
-getting executed.
-
-For the various possible action neurons, if they are driven by a sufficiently
-strong level, we do this:
-
-    MOVE_* actions- queue our agent for deferred movement with peeps.queueForMove(); the
-         queue will be executed at the end of the multithreaded loop in a single thread.
-    SET_RESPONSIVENESS action - immediately change indiv.responsiveness to the action
-         level scaled to 0.0..1.0 (because we have exclusive access to this member in
-         our own individual during this function)
-    SET_OSCILLATOR_PERIOD action - immediately change our individual's indiv.oscPeriod
-         to the action level exponentially scaled to 2..2048 (TBD)
-    EMIT_SIGNALn action(s) - immediately increment the signal level at our agent's
-         location using signals.increment() (using a thread-safe call)
-    KILL_FORWARD action - queue the other agent for deferred death with
-         peeps.queueForDeath()
-
-The deferred movement and death queues will be emptied by the caller at the end of the
-simulator step by endOfSimStep() in a single thread after all individuals have been
-evaluated multithreadedly.
-**********************************************************************************/
-
-executeActions(indiv, actionLevels)
+executeActions = function(indiv, actionLevels)
 
     -- // Only a subset of all possible actions might be enabled (i.e., compiled in).
     -- // This returns true if the specified action is enabled. See sensors-actions.h
@@ -82,7 +84,7 @@ executeActions(indiv, actionLevels)
     if (isEnabled(Action.SET_OSCILLATOR_PERIOD)) then 
         local periodf = actionLevels[Action.SET_OSCILLATOR_PERIOD]
         local newPeriodf01 = (math.tanh(periodf) + 1.0) / 2.0 -- // convert to 0.0..1.0
-        local newPeriod = 1 + math.floor(1.5 + math.exp(7.0 * newPeriodf01))
+        local newPeriod = 1 + math.floor(1 + math.exp(7.0 * newPeriodf01))
         assert(newPeriod >= 2 and newPeriod <= 2048)
         indiv.oscPeriod = newPeriod
     end 
@@ -177,26 +179,27 @@ executeActions(indiv, actionLevels)
     end
     if (isEnabled(Action.MOVE_LEFT)) then
         local level = actionLevels[Action.MOVE_LEFT]
-        local offset = indiv.lastMoveDir:rotate90DegCCW():asNormalizedCoord()
+        local ccw = indiv.lastMoveDir:rotate90DegCCW()
+        local offset = Dir.new(ccw):asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
     if (isEnabled(Action.MOVE_RIGHT)) then 
         local level = actionLevels[Action.MOVE_RIGHT]
-        local offset = indiv.lastMoveDir:rotate90DegCW():asNormalizedCoord()
+        local offset = Dir.new(indiv.lastMoveDir:rotate90DegCW()):asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
     if (isEnabled(Action.MOVE_RL)) then 
         local level = actionLevels[Action.MOVE_RL]
-        local offset = indiv.lastMoveDir:rotate90DegCW():asNormalizedCoord()
+        local offset = Dir.new(indiv.lastMoveDir:rotate90DegCW()):asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
 
     if (isEnabled(Action.MOVE_RANDOM)) then 
         local level = actionLevels[Action.MOVE_RANDOM]
-        local offset = Dir:random8():asNormalizedCoord()
+        local offset = Dir.new(Dir:random8()):asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end
@@ -222,7 +225,7 @@ executeActions(indiv, actionLevels)
     local movementOffset = Coord.new( probX * signumX, probY * signumY )
 
     -- // Move there if it's a valid location
-    local newLoc = indiv.loc:ADD(movementOffset)
+    local newLoc = indiv.loc:ADDCOORD(movementOffset)
     if (grid:isInBounds(newLoc) and grid:isEmptyAt(newLoc)) then 
         peeps:queueForMove(indiv, newLoc)
     end 

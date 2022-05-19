@@ -26,13 +26,16 @@ Indiv.initialize = function(self, index, loc, genome)
     self.birthLoc = loc
     grid:set(loc, index)
     self.age = 0
+    self.nnet = NeuralNet.new()
     self.oscPeriod = 34 -- // ToDo !!! define a constant
     self.alive = true
-    self.lastMoveDir = Dir:random8()
+    self.lastMoveDir = Dir.new()
     self.responsiveness = 0.5 -- // range 0.0..1.0
     self.longProbeDist = p.longProbeDistance
     self.challengeBits = false -- // will be set true when some task gets accomplished
     self.genome = table.shallowcopy(genome)
+    self.lastMoveDir.dir9 = Dir.random8()
+
     self:createWiringFromGenome()
 end 
 
@@ -79,11 +82,11 @@ Indiv.feedForward = function(self, simStep)
     -- // input connections. The sum has an arbitrary range. Return by value assumes compiler
     -- // return value optimization.
     local actionLevels = {}
-    -- actionLevels.fill(0.0); -- // undriven actions default to value 0.0
-
+    for i=0, Sensor.NUM_SENSES do actionLevels[i] = 0.0 end -- // undriven actions default to value 0.0
     -- // Weighted inputs to each neuron are summed in neuronAccumulators[]
     local neuronAccumulators = {}
-    for i = 0, #self.nnet.neurons do neuronAccumulators[i] = 0.0 end 
+    local neuronCount = table.count(self.nnet.neurons)
+    for i = 0, neuronCount do neuronAccumulators[i] = 0.0 end 
 
     -- // Connections were ordered at birth so that all connections to neurons get
     -- // processed here before any connections to actions. As soon as we encounter the
@@ -98,7 +101,8 @@ Indiv.feedForward = function(self, simStep)
             -- // We've handled all the connections from sensors and now we are about to
             -- // start on the connections to the action outputs, so now it's time to
             -- // update and latch all the neuron outputs to their proper range (-1.0..1.0)
-            for neuronIndex = 0, #nnet.neurons -1 do
+
+            for neuronIndex = 0, neuronCount -1 do
                 if (self.nnet.neurons[neuronIndex].driven) then
                     self.nnet.neurons[neuronIndex].output = math.tanh(neuronAccumulators[neuronIndex])
                 end 
@@ -111,14 +115,14 @@ Indiv.feedForward = function(self, simStep)
         local inputVal = 0
         if (conn.sourceType == SENSOR) then 
             inputVal = self:getSensor(conn.sourceNum, simStep)
-        else 
+        else             
             inputVal = self.nnet.neurons[conn.sourceNum].output
         end
 
         -- // Weight the connection's value and add to neuron accumulator or action accumulator.
         -- // The action and neuron accumulators will therefore contain +- float values in
         -- // an arbitrary range.
-        if (conn.sinkType == ACTION) then
+        if (conn.sinkType == ACTION) then           
             actionLevels[conn.sinkNum] = actionLevels[conn.sinkNum] + inputVal * conn:weightAsFloat()
         else 
             neuronAccumulators[conn.sinkNum] = neuronAccumulators[conn.sinkNum] + inputVal * conn:weightAsFloat()
@@ -203,14 +207,14 @@ local sensorNumFunc = {
         return math.min(1.0, math.max(0.0, sensorVal))
     end,
 
-    [Sensor.LONGPROBE_POP_FWD]= function(self)   
+    [Sensor.LONGPROBE_POP_FWD] = function(self)   
         -- // Measures the distance to the nearest other individual in the
         -- // forward direction. If non found, returns the maximum sensor value.
         -- // Maps the result to the sensor range 0.0..1.0.
         return longProbePopulationFwd(self.loc, self.lastMoveDir, self.longProbeDist) / self.longProbeDist -- // 0..1
     end,
 
-    [Sensor.LONGPROBE_BAR_FWD]= function(self)
+    [Sensor.LONGPROBE_BAR_FWD] = function(self)
         -- // Measures the distance to the nearest barrier in the forward
         -- // direction. If non found, returns the maximum sensor value.
         -- // Maps the result to the sensor range 0.0..1.0.
@@ -297,16 +301,16 @@ local sensorNumFunc = {
 Indiv.getSensor = function(self, sensorNum, simStep) 
 
     local sensorVal = 0.0
-
-    local newVal = sensorNumFunc[sensorNum](self)
-    if(newVal == nil) then print("Invalid sensor number: "..tostring(sensorNum)) end
-    sensorVal = newVal    
+    local func = sensorNumFunc[sensorNum]
+    if(func == nil) then print("Invalid sensor number: "..tostring(sensorNum)) end
+    sensorVal = func(self)
+    
     if (sensorVal == "nan" or sensorVal < -0.01 or sensorVal > 1.01) then
         -- // std::cout << "sensorVal=" << (int)sensorVal << " for " << sensorName((Sensor)sensorNum) << std::endl;
         sensorVal = math.max(0.0, math.min(sensorVal, 1.0)) -- // clip
     end 
 
-    assert(not (sensorVal == "nan") and sensorVal >= -0.01 and sensorVal <= 1.01)
+    assert( (sensorVal ~= "nan") and sensorVal >= -0.01 and sensorVal <= 1.01)
     return sensorVal
 end
 
@@ -454,11 +458,13 @@ Indiv.createWiringFromGenome = function(self)
 
     -- // Create the indiv's neural node list
     self.nnet.neurons = {}
+    local idx = 0
     for k,v in pairs(nodeMap) do 
         local newnode = Node.new()
         newnode.output = initialNeuronOutput()
         newnode.driven = (nodeMap[k].numInputsFromSensorsOrOtherNeurons ~= 0)
-        tinsert(self.nnet.neurons, newnode)
+        self.nnet.neurons[idx] = newnode
+        idx = idx + 1
     end 
 
 end

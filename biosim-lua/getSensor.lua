@@ -12,12 +12,11 @@ getPopulationDensityAlongAxis = function( loc, dir)
     -- // An empty neighborhood results in a sensor value exactly midrange; below
     -- // midrange if the population density is greatest in the reverse direction,
     -- // above midrange if density is greatest in forward direction.
-
     assert(dir:NEQ(Compass.CENTER)) --  // require a defined axis
 
     local sum = 0.0
     local dirVec = dir:asNormalizedCoord()
-    len = math.sqrt(dirVec.x * dirVec.x + dirVec.y * dirVec.y)
+    local len = math.sqrt(dirVec.x * dirVec.x + dirVec.y * dirVec.y)
     local dirVecX = dirVec.x / len
     local dirVecY = dirVec.y / len -- // Unit vector components along dir
 
@@ -56,7 +55,7 @@ getShortProbeBarrierDistance = function(loc0, dir, probeDistance)
     while (numLocsToTest > 0 and grid:isInBounds(loc) and not grid:isBarrierAt(loc)) do
         countFwd = countFwd + 1
         loc = loc:ADD(dir)
-        --numLocsToTest;
+        numLocsToTest = numLocsToTest - 1
     end 
     if (numLocsToTest > 0 and not grid.isInBounds(loc)) then
         countFwd = probeDistance
@@ -68,7 +67,7 @@ getShortProbeBarrierDistance = function(loc0, dir, probeDistance)
     while (numLocsToTest > 0 and grid:isInBounds(loc) and not grid:isBarrierAt(loc)) do
         countRev = countRev + 1
         loc = loc:SUB(dir)
-        --numLocsToTest;
+        numLocsToTest = numLocsToTest - 1
     end 
     if (numLocsToTest > 0 and not grid:isInBounds(loc)) then
         countRev = probeDistance
@@ -121,11 +120,10 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
     local dirVecY = dirVec.y / len -- // Unit vector components along dir
 
     local f = function(tloc) 
-        if (tloc ~= loc) then
-            local offset = tloc:SUB(loc)
+        if (tloc:NEQ(loc)) then
+            local offset = tloc:SUBCOORD(loc)
             local proj = (dirVecX * offset.x + dirVecY * offset.y) -- // Magnitude of projection along dir
-            local contrib = (proj * signals:getMagnitude(layerNum, loc)) /
-                    (offset.x * offset.x + offset.y * offset.y)
+            local contrib = (proj * signals:getMagnitude(layerNum, loc)) / (offset.x * offset.x + offset.y * offset.y)
             sum = sum + contrib
         end 
     end 
@@ -149,12 +147,12 @@ longProbePopulationFwd = function(loc, dir, longProbeDist)
 
     assert(longProbeDist > 0)
     local count = 0
-    loc = loc:ADD( dir )
+    loc = loc:ADDDIR( dir )
     local numLocsToTest = longProbeDist
     while (numLocsToTest > 0 and grid:isInBounds(loc) and grid:isEmptyAt(loc)) do
         count = count + 1
-        loc = loc:ADD( dir )
-        --numLocsToTest;
+        loc = loc:ADDDIR( dir )
+        numLocsToTest = numLocsToTest - 1
     end 
     if (numLocsToTest > 0 and (not grid:isInBounds(loc) or grid:isBarrierAt(loc))) then
         return longProbeDist
@@ -170,15 +168,14 @@ end
 -- // and no barriers are found, returns longProbeDist.
 -- // Returns 0..longProbeDist.
 longProbeBarrierFwd = function(loc, dir, longProbeDist)
-
     assert(longProbeDist > 0)
     local count = 0
-    loc = loc:ADD( dir )
+    loc = loc:ADDDIR( dir )
     local numLocsToTest = longProbeDist
     while (numLocsToTest > 0 and grid:isInBounds(loc) and not grid:isBarrierAt(loc)) do
         count = count + 1
-        loc = loc:ADD(dir)
-        --numLocsToTest;
+        loc = loc:ADDDIR(dir)
+        numLocsToTest = numLocsToTest - 1
     end 
     if (numLocsToTest > 0 and not grid:isInBounds(loc)) then
         return longProbeDist
