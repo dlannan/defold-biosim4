@@ -24,7 +24,7 @@ Indiv.initialize = function(self, index, loc, genome)
     self.index = index
     self.loc = loc
     self.birthLoc = loc
-    grid:set(loc, index)
+    --grid:set(loc, index)
     self.age = 0
     self.nnet = NeuralNet.new()
     self.oscPeriod = 34 -- // ToDo !!! define a constant

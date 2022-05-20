@@ -159,7 +159,7 @@ Sim.simulator = function(self, filename)
     grid:init(p.sizeX, p.sizeY)         -- // the land on which the peeps live
     signals:init(p.signalLayers, p.sizeX, p.sizeY)  -- // where the pheromones waft
     peeps:init(p.population)            -- // the peeps themselves
-
+        
     -- // If imageWriter is to be run in its own thread, start it here:
     -- //std::thread t(&ImageWriter::saveFrameThread, &imageWriter);
     -- //dmThread::New(saveFrameThread, 0x80000, (void *)&imageWriter, "biosim_imagewriter_thread");
@@ -170,7 +170,7 @@ Sim.simulator = function(self, filename)
 
     initializeGeneration0()     -- // starting population
     runMode = RunMode.PAUSE
-
+    
     -- TODO: Change from using threads to timer or similar.
     -- dmThread::New(DoSimStep, 0x80000, nullptr, "biosim_thread");
 end 

@@ -2,6 +2,11 @@
 local tinsert = table.insert
 local Coord = require("biosim-lua.Coord")
 
+local dumpGrid = function( grid )
+    print(grid.sizex.." "..grid.sizey)
+    for i = 0, grid.sizex do print(i, grid.data[i], grid.data[i].data[0]) end
+end
+
 -- // Grid is a somewhat dumb 2D container of unsigned 16-bit values.
 -- // Grid understands that the elements are either EMPTY, BARRIER, or
 -- // otherwise an index value into the peeps container.
@@ -25,82 +30,82 @@ Grid.BARRIER = 0xffff
 -- // Column order here allows us to access grid elements as data[x][y]
 -- // while thinking of x as column and y as row
 local Column = {
-    zeroFill = function(self) for k,v in pairs(self.data) do v = 0 end end,
-    GetRow = function(self, rowNum) return data[rowNum] end,
-    size = function() return #data end,
+    zeroFill = function(self) for k = 0, table.count(self.data) do self.data[k] = 0 end end,
+    GetRow = function(self, rowNum) return self.data[rowNum] end,
+    size = function() return table.count(self.data) end,
     data = {},
 }
 
 Column.new = function(numRows) 
+    numRows = numRows or 1 -- Safety
     local col = table.shallowcopy(Column) 
-    for i = 0, numRows do col.data[i-1] = 0 end 
+    for i = 0, numRows do col.data[i] = 0 end 
     return col
 end
 
 Grid.init = function(self, sizeX, sizeY) 
-    self.sizex = sizeX
-    self.sizey = sizeY
+    self.sizex = sizeX or 1
+    self.sizey = sizeY or 1
     self.data = {}
     for r = 0, sizeX do 
-        self.data[r] = {}
-        for s = 0, sizeX do 
-            self.data[r][s] = Grid.EMPTY 
-        end 
+        self.data[r] = Column.new(sizeY)
     end 
 end
 
 Grid.zeroFill = function(self) 
-    for k,column in pairs(self.data) do
-        for l, item in pairs(column) do
-            item = Grid.EMPTY 
+    for k = 0, self.sizex do
+        local col = self.data[k]
+        for l = 0, self.sizey do
+            col.data[l] = 0
         end 
     end 
 end
 
 Grid.sizeX = function(self) 
-    return table.count(self.data) 
+    return self.sizex
 end
 
 Grid.sizeY = function(self) 
-    return table.count(self.data[1]) 
+    return self.sizey
 end
 
 Grid.at = function(self, loc)  
-    pprint(loc.x, loc.y)
-    return self.data[loc.x][loc.y] 
+    local d = self.data[loc.x].data[loc.y] 
+    return d
 end 
 
 Grid.atXY = function(self, x, y) 
-    return self.data[x][y] 
+    return self.data[x].data[y] 
 end
 
 Grid.isInBounds = function(self, loc) 
-    return loc.x >= 0 and loc.x < self:sizeX() and loc.y >= 0 and loc.y < self:sizeY() 
+    return loc.x >= 0 and loc.x < self.sizex and loc.y >= 0 and loc.y < self.sizey 
 end
 
 Grid.isEmptyAt = function(self, loc) 
-    return self:at(loc) == Grid.EMPTY 
+    return self.data[loc.x].data[loc.y] == Grid.EMPTY 
 end
 
 Grid.isBarrierAt = function(self, loc) 
-    return self:at(loc) == Grid.BARRIER 
+    return self.data[loc.x].data[loc.y] == Grid.BARRIER 
 end
 
 -- // Occupied means an agent is living there.
-Grid.isOccupiedAt = function(self, loc) 
-    return self:at(loc) ~= Grid.EMPTY and self:at(loc) ~= Grid.BARRIER 
+Grid.isOccupiedAt = function(self, loc)
+    local at = self.data[loc.x].data[loc.y]  
+    return at ~= Grid.EMPTY and at ~= Grid.BARRIER 
 end
 
 Grid.isBorder = function(self, loc) 
-    return loc.x == 0 or loc.x == self:sizeX() - 1 or loc.y == 0 or loc.y == self:sizeY() - 1 
+    return loc.x == 0 or loc.x == self.sizeX - 1 or loc.y == 0 or loc.y == self.sizeY - 1 
 end
 
 Grid.set = function(self, loc, val) 
-    self.data[loc.x][loc.y] = val 
+    self.data[loc.x].data[loc.y] = val 
 end
 
 Grid.setXY = function(self, x, y, val) 
-    self.data[x][y] = val 
+    self.data[x].data[y] = val 
 end
 
 Grid.findEmptyLocation = function(self) 
@@ -109,6 +114,7 @@ Grid.findEmptyLocation = function(self)
     while (true) do
         loc.x = randomUint:GetRange(0, p.sizeX - 1)
         loc.y = randomUint:GetRange(0, p.sizeY - 1)
+        pprint(loc.x.."  "..loc.y.."  "..self.data[loc.x].data[loc.y])
         if (self:isEmptyAt(loc)) then 
             break
         end

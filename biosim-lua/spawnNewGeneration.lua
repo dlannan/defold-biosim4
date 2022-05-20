@@ -5,16 +5,17 @@
 initializeGeneration0 = function()
 
     -- // The grid has already been allocated, just clear and reuse it
-    grid:zeroFill();
+    grid:zeroFill()
     grid:createBarrier(p.barrierType)
 
     -- // The signal layers have already been allocated, so just reuse them
     signals:zeroFill()
-
+    
     -- // Spawn the population. The peeps container has already been allocated,
     -- // just clear and reuse it
     for index = 1, p.population do
         local indiv = peeps:getIndivIndex(index)
+        pprint(index)
         indiv:initialize(index, grid:findEmptyLocation(), makeRandomGenome())
     end
 end
