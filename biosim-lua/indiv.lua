@@ -24,17 +24,16 @@ Indiv.initialize = function(self, index, loc, genome)
     self.index = index
     self.loc = loc
     self.birthLoc = loc
-    --grid:set(loc, index)
+    grid:set(loc, index)
     self.age = 0
     self.nnet = NeuralNet.new()
     self.oscPeriod = 34 -- // ToDo !!! define a constant
     self.alive = true
-    self.lastMoveDir = Dir.new()
     self.responsiveness = 0.5 -- // range 0.0..1.0
     self.longProbeDist = p.longProbeDistance
     self.challengeBits = false -- // will be set true when some task gets accomplished
     self.genome = table.shallowcopy(genome)
-    self.lastMoveDir.dir9 = Dir.random8()
+    self.lastMoveDir = Dir.random8()
 
     self:createWiringFromGenome()
 end 
@@ -82,7 +81,7 @@ Indiv.feedForward = function(self, simStep)
     -- // input connections. The sum has an arbitrary range. Return by value assumes compiler
     -- // return value optimization.
     local actionLevels = {}
-    for i=0, Sensor.NUM_SENSES do actionLevels[i] = 0.0 end -- // undriven actions default to value 0.0
+    for i=0, Action.NUM_ACTIONS do actionLevels[i] = 0.0 end -- // undriven actions default to value 0.0
     -- // Weighted inputs to each neuron are summed in neuronAccumulators[]
     local neuronAccumulators = {}
     local neuronCount = table.count(self.nnet.neurons)
@@ -97,7 +96,7 @@ Indiv.feedForward = function(self, simStep)
 
     local neuronOutputsComputed = false
     for k, conn in pairs(self.nnet.connections) do
-        if (conn.sinkType == ACTION and not neuronOutputsComputed) then 
+        if ((conn.sinkType == ACTION) and (neuronOutputsComputed == false)) then 
             -- // We've handled all the connections from sensors and now we are about to
             -- // start on the connections to the action outputs, so now it's time to
             -- // update and latch all the neuron outputs to their proper range (-1.0..1.0)
@@ -125,6 +124,8 @@ Indiv.feedForward = function(self, simStep)
         if (conn.sinkType == ACTION) then           
             actionLevels[conn.sinkNum] = actionLevels[conn.sinkNum] + inputVal * conn:weightAsFloat()
         else 
+            -- pprint(conn.sinkNum, table.count(neuronAccumulators) )
+            assert(neuronAccumulators[conn.sinkNum] ~= nil, "conn.sinkNum: "..conn.sinkNum.."    "..table.count(neuronAccumulators))
             neuronAccumulators[conn.sinkNum] = neuronAccumulators[conn.sinkNum] + inputVal * conn:weightAsFloat()
         end 
     end
@@ -197,7 +198,7 @@ local sensorNumFunc = {
     [Sensor.OSC1]= function(self)
         -- // Maps the oscillator sine wave to sensor range 0.0..1.0;
         -- // cycles starts at simStep 0 for everbody.
-        local phase = (simStep % oscPeriod) / oscPeriod -- // 0.0..1.0
+        local phase = (simStep % self.oscPeriod) / self.oscPeriod -- // 0.0..1.0
         local factor = -math.cos(phase * 2.0 * 3.1415927)
         assert(factor >= -1.0 and factor <= 1.0)
         factor = factor + 1.0   --  // convert to 0.0..2.0
@@ -286,15 +287,15 @@ local sensorNumFunc = {
     [Sensor.GENETIC_SIM_FWD]= function(self)
         -- // Return minimum sensor value if nobody is alive in the forward adjacent location,
         -- // else returns a similarity match in the sensor range 0.0..1.0
-        local loc2 = loc:ADD(self.lastMoveDir)
+        local loc2 = self.loc:ADDDIR(self.lastMoveDir)
         if (grid:isInBounds(loc2) and grid:isOccupiedAt(loc2)) then
             local indiv2 = peeps:getIndiv(loc2)
-            if (indiv2.alive) then
+            if (indiv2.alive and indiv2.index > 0) then
                 return genomeSimilarity(self.genome, indiv2.genome) -- // 0.0..1.0
             end 
         end
         return 0.0
-    end,
+    end, 
 }
 
 -- // Returned sensor values range SENSOR_MIN..SENSOR_MAX
@@ -305,12 +306,14 @@ Indiv.getSensor = function(self, sensorNum, simStep)
     if(func == nil) then print("Invalid sensor number: "..tostring(sensorNum)) end
     sensorVal = func(self)
     
-    if (sensorVal == "nan" or sensorVal < -0.01 or sensorVal > 1.01) then
+    if (sensorVal < -0.01 or sensorVal > 1.01) then
         -- // std::cout << "sensorVal=" << (int)sensorVal << " for " << sensorName((Sensor)sensorNum) << std::endl;
         sensorVal = math.max(0.0, math.min(sensorVal, 1.0)) -- // clip
     end 
 
-    assert( (sensorVal ~= "nan") and sensorVal >= -0.01 and sensorVal <= 1.01)
+    if(sensorVal ~= sensorVal) then sensorVal = 0 end 
+
+    assert( (sensorVal == sensorVal) and sensorVal >= -0.01 and sensorVal <= 1.01, "[ASSERT] sensorVal: "..tostring(sensorVal).. "  sensorNum: "..tostring(sensorNum))
     return sensorVal
 end
 

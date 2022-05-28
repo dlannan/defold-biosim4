@@ -12,7 +12,7 @@ getPopulationDensityAlongAxis = function( loc, dir)
     -- // An empty neighborhood results in a sensor value exactly midrange; below
     -- // midrange if the population density is greatest in the reverse direction,
     -- // above midrange if density is greatest in forward direction.
-    assert(dir:NEQ(Compass.CENTER)) --  // require a defined axis
+    assert(dir:NEQ(Compass.CENTER)) -- // require a defined axis
 
     local sum = 0.0
     local dirVec = dir:asNormalizedCoord()
@@ -22,7 +22,7 @@ getPopulationDensityAlongAxis = function( loc, dir)
 
     local f = function(tloc) 
         if (tloc:NEQ(loc) and grid:isOccupiedAt(tloc)) then
-            local offset = tloc:SUB(loc)
+            local offset = tloc:SUBCOORD(loc)
             local proj = dirVecX * offset.x + dirVecY * offset.y -- // Magnitude of projection along dir
             local contrib = proj / (offset.x * offset.x + offset.y * offset.y)
             sum = sum + contrib
@@ -47,26 +47,26 @@ end
 -- // are found, the result is sensor mid-range. Ignores agents in the path.
 getShortProbeBarrierDistance = function(loc0, dir, probeDistance)
 
-    countFwd = 0
-    countRev = 0
-    local loc = loc0:ADD( dir )
+    local countFwd = 0
+    local countRev = 0
+    local loc = loc0:ADDDIR( dir )
     local numLocsToTest = probeDistance
     -- // Scan positive direction
     while (numLocsToTest > 0 and grid:isInBounds(loc) and not grid:isBarrierAt(loc)) do
         countFwd = countFwd + 1
-        loc = loc:ADD(dir)
+        loc = loc:ADDDIR(dir)
         numLocsToTest = numLocsToTest - 1
     end 
-    if (numLocsToTest > 0 and not grid.isInBounds(loc)) then
+    if (numLocsToTest > 0 and not grid:isInBounds(loc)) then
         countFwd = probeDistance
     end 
 
     -- // Scan negative direction
     numLocsToTest = probeDistance
-    loc = loc0:SUB(dir)
+    loc = loc0:SUBDIR(dir)
     while (numLocsToTest > 0 and grid:isInBounds(loc) and not grid:isBarrierAt(loc)) do
         countRev = countRev + 1
-        loc = loc:SUB(dir)
+        loc = loc:SUBDIR(dir)
         numLocsToTest = numLocsToTest - 1
     end 
     if (numLocsToTest > 0 and not grid:isInBounds(loc)) then
@@ -83,10 +83,9 @@ getSignalDensity = function(layerNum, loc)
 
     -- // returns magnitude of the specified signal layer in a neighborhood, with
     -- // 0.0..maxSignalSum converted to the sensor range.
-
-    countLocs = 0
-    sum = 0
-    center = loc
+    local countLocs = 0
+    local sum = 0
+    local center = loc
 
     local Locfunc = function(tloc) 
         countLocs = countLocs + 1
@@ -94,8 +93,8 @@ getSignalDensity = function(layerNum, loc)
     end 
 
     visitNeighborhood(center, p.signalSensorRadius, Locfunc)
-    maxSum = countLocs * SIGNAL_MAX
-    sensorVal = sum / maxSum -- // convert to 0.0..1.0
+    local maxSum = countLocs * SIGNAL_MAX
+    local sensorVal = sum / maxSum -- // convert to 0.0..1.0
 
     return sensorVal
 end
@@ -110,8 +109,8 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
     -- // about 2*radius*SIGNAL_MAX (?). We don't adjust for being close to a border,
     -- // so signal densities along borders and in corners are commonly sparser than
     -- // away from borders.
-
-    assert(dir:NEQ(Compass_CENTER)) -- // require a defined axis
+    -- pprint(dir)
+    assert(dir:NEQ(Compass.CENTER)) -- // require a defined axis
 
     local sum = 0.0
     local dirVec = dir:asNormalizedCoord()
@@ -123,14 +122,16 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
         if (tloc:NEQ(loc)) then
             local offset = tloc:SUBCOORD(loc)
             local proj = (dirVecX * offset.x + dirVecY * offset.y) -- // Magnitude of projection along dir
+            -- pprint(offset.x.."  "..offset.y.."       "..signals:getMagnitude(layerNum, loc).."    "..proj)
             local contrib = (proj * signals:getMagnitude(layerNum, loc)) / (offset.x * offset.x + offset.y * offset.y)
+
             sum = sum + contrib
         end 
     end 
 
     visitNeighborhood(loc, p.signalSensorRadius, f)
-
     local maxSumMag = 6.0 * p.signalSensorRadius * SIGNAL_MAX
+--    pprint(sum, maxSumMag)
     assert(sum >= -maxSumMag and sum <= maxSumMag)
     local sensorVal = sum / maxSumMag -- // convert to -1.0..1.0
     sensorVal = (sensorVal + 1.0) / 2.0 -- // convert to 0.0..1.0

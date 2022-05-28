@@ -165,7 +165,8 @@ Dir = {
     end,
 
     rotate = function(self, n) 
-        return rotations[self:asInt() * 8 + bit.band(n, 7)]
+        self.dir9 = rotations[self:asInt() * 8 + bit.band(n, 7)]
+        return self
     end,
     rotate90DegCW = function(self) return self:rotate(2) end,
     rotate90DegCCW = function(self) return self:rotate(-2) end,
@@ -188,6 +189,7 @@ end
 Dir.random8 = function() 
     local d = Dir.new(Compass.N)
     local rn = randomUint:GetRange(0, 7)
-    return d:rotate(rn) 
+    d:rotate(rn) 
+    return d
 end
 

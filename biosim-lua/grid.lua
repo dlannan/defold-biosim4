@@ -29,35 +29,37 @@ Grid.BARRIER = 0xffff
 
 -- // Column order here allows us to access grid elements as data[x][y]
 -- // while thinking of x as column and y as row
-local Column = {
-    zeroFill = function(self) for k = 0, table.count(self.data) do self.data[k] = 0 end end,
-    GetRow = function(self, rowNum) return self.data[rowNum] end,
-    size = function() return table.count(self.data) end,
-    data = {},
-}
+-- local Column = {
+--     zeroFill = function(self) for k = 0, table.count(self.data) do self.data[k] = 0 end end,
+--     GetRow = function(self, rowNum) return self.data[rowNum] end,
+--     size = function() return table.count(self.data) end,
+--     data = {},
+-- }
 
-Column.new = function(numRows) 
-    numRows = numRows or 1 -- Safety
-    local col = table.shallowcopy(Column) 
-    for i = 0, numRows do col.data[i] = 0 end 
-    return col
-end
+-- Column.new = function(numRows) 
+--     numRows = numRows or 1 -- Safety
+--     local col = table.shallowcopy(Column) 
+--     for i = 0, numRows do col.data[i] = 0 end 
+--     return col
+-- end
 
 Grid.init = function(self, sizeX, sizeY) 
     self.sizex = sizeX or 1
     self.sizey = sizeY or 1
     self.data = {}
-    for r = 0, sizeX do 
-        self.data[r] = Column.new(sizeY)
+    for x = 0, sizeX do 
+        self.data[x] = {}
+        for y = 0, sizeY do 
+            self.data[x][y] = 0
+        end
     end 
 end
 
 Grid.zeroFill = function(self) 
-    for k = 0, self.sizex do
-        local col = self.data[k]
-        for l = 0, self.sizey do
-            col.data[l] = 0
-        end 
+    for x = 0, self.sizex do 
+        for y = 0, self.sizey do 
+            self.data[x][y] = 0
+        end
     end 
 end
 
@@ -70,42 +72,42 @@ Grid.sizeY = function(self)
 end
 
 Grid.at = function(self, loc)  
-    local d = self.data[loc.x].data[loc.y] 
+    local d = self.data[loc.x][loc.y] 
     return d
 end 
 
 Grid.atXY = function(self, x, y) 
-    return self.data[x].data[y] 
+    return self.data[x][y] 
 end
 
 Grid.isInBounds = function(self, loc) 
-    return loc.x >= 0 and loc.x < self.sizex and loc.y >= 0 and loc.y < self.sizey 
+    return (loc.x >= 0) and (loc.x < self.sizex) and (loc.y >= 0) and (loc.y < self.sizey)
 end
 
 Grid.isEmptyAt = function(self, loc) 
-    return self.data[loc.x].data[loc.y] == Grid.EMPTY 
+    local spot = self.data[loc.x][loc.y]
+    return (spot == Grid.EMPTY)
 end
 
 Grid.isBarrierAt = function(self, loc) 
-    return self.data[loc.x].data[loc.y] == Grid.BARRIER 
+    return self.data[loc.x][loc.y] == Grid.BARRIER 
 end
 
 -- // Occupied means an agent is living there.
-Grid.isOccupiedAt = function(self, loc)
-    local at = self.data[loc.x].data[loc.y]  
+Grid.isOccupiedAt = function(self, loc) 
     return at ~= Grid.EMPTY and at ~= Grid.BARRIER 
 end
 
 Grid.isBorder = function(self, loc) 
-    return loc.x == 0 or loc.x == self.sizeX - 1 or loc.y == 0 or loc.y == self.sizeY - 1 
+    return (loc.x == 0) or (loc.x == self.sizeX - 1) or (loc.y == 0) or (loc.y == self.sizeY - 1)
 end
 
 Grid.set = function(self, loc, val) 
-    self.data[loc.x].data[loc.y] = val 
+    self.data[loc.x][loc.y] = val 
 end
 
 Grid.setXY = function(self, x, y, val) 
-    self.data[x].data[y] = val 
+    self.data[x][y] = val 
 end
 
 Grid.findEmptyLocation = function(self) 
@@ -114,8 +116,7 @@ Grid.findEmptyLocation = function(self)
     while (true) do
         loc.x = randomUint:GetRange(0, p.sizeX - 1)
         loc.y = randomUint:GetRange(0, p.sizeY - 1)
-        pprint(loc.x.."  "..loc.y.."  "..self.data[loc.x].data[loc.y])
-        if (self:isEmptyAt(loc)) then 
+        if ( grid:isEmptyAt(loc) == true ) then 
             break
         end
     end
@@ -126,7 +127,7 @@ Grid.createBarrier = function(barrierType)  print("empty") end
 Grid.getBarrierLocations = function(self) return self.barrierLocations end
 Grid.getBarrierCenters = function(self) return self.barrierCenters end
 -- // Direct access:
-Grid.GetColumn = function(self, columnXNum) return self.data[columnXNum] end 
+-- Grid.GetColumn = function(self, columnXNum) return self.data[columnXNum] end 
 
 -- // This is a utility function used when inspecting a local neighborhood around
 -- // some location. This function feeds each valid (in-bounds) location in the specified
@@ -165,7 +166,7 @@ Grid.createBarrier = function(self, barrierType)
     local drawBox = function(minX, minY, maxX, maxY) 
         for x = minX, maxX do
             for y = minY, maxY do
-                grid:set(x, y, BARRIER)
+                grid:set(x, y, Grid.BARRIER)
                 tinsert(self.barrierLocations, {x, y} )
             end
         end 

@@ -123,9 +123,9 @@ makeRandomGene = function()
     local gene = table.shallowcopy(Gene)
 
     gene.sourceType = bit.band(randomUint:Get(), 1)
-    gene.sourceNum = randomUint:GetRange(0, 0x7fff)
+    gene.sourceNum = randomUint:GetRange(0, 127)
     gene.sinkType = bit.band(randomUint:Get(), 1)
-    gene.sinkNum = randomUint:GetRange(0, 0x7fff)
+    gene.sinkNum = randomUint:GetRange(0, 127)
     gene.weight = Gene.makeRandomWeight()
 
     return gene
@@ -257,8 +257,8 @@ end
 -- // This applies a point mutation at a random bit in a genome.
 local randomBitFlip = function(genome)
 
-    local byteIndex = randomUint:GetRange(0, #genome - 1) * sizeof(Gene)
-    local elementIndex = randomUint:GetRange(0, #genome - 1)
+    --local byteIndex = randomUint:GetRange(0, #genome - 1) * sizeof(Gene)
+    local elementIndex = randomUint:GetRange(0, table.count(genome) - 1)
     local bitIndex8 = bit.lshift(1, randomUint:GetRange(0, 7))
 
     local chance = randomUint:Get() / RANDOM_UINT_MAX -- // 0..1

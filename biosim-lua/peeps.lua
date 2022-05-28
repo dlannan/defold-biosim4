@@ -60,7 +60,7 @@ end
 -- // to the same location; only the first one will actually get moved.
 Peeps.queueForMove = function(self, indiv, newLoc)
     assert(indiv.alive)
-    tinsert(self.moveQueue, { indiv.index, Coord.new(newLoc) })
+    tinsert(self.moveQueue, { indiv.index, newLoc })
 end 
 
 -- // Called in single-thread mode at end of sim step. This executes all the
@@ -70,10 +70,10 @@ end
 -- // death queue was drained, so we'll ignore already-dead agents.
 Peeps.drainMoveQueue = function(self) 
     for k, moveRecord in pairs(self.moveQueue) do
-        local indiv = peeps:getIndivIndex(k)
+        local indiv = peeps:getIndivIndex(moveRecord[1])
         if (indiv.alive) then 
-            local newLoc = moveRecord
-            local moveDir = newLoc:SUBCOORD(indiv.loc):asDir()
+            local newLoc = moveRecord[2]
+            local moveDir = Dir.new(newLoc:SUBCOORD(indiv.loc):asDir())
             if (grid:isEmptyAt(newLoc)) then
                 grid:set(indiv.loc, 0)
                 grid:set(newLoc, indiv.index)

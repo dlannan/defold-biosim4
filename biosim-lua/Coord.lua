@@ -47,8 +47,8 @@ Coord.asDir = function(self)
         N, N, N, W, NW, N, NE, N, N
     }
 
-    local xp = x * tanD + y * tanN
-    local yp = y * tanD - x * tanN
+    local xp = self.x * tanD + self.y * tanN
+    local yp = self.y * tanD - self.x * tanN
 
     -- // We can easily check which side of the four boundary lines
     -- // the point now falls on, giving 16 cases, though only 9 are

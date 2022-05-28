@@ -15,9 +15,9 @@ initializeGeneration0 = function()
     -- // just clear and reuse it
     for index = 1, p.population do
         local indiv = peeps:getIndivIndex(index)
-        pprint(index)
         indiv:initialize(index, grid:findEmptyLocation(), makeRandomGenome())
     end
+    pprint("ZERO FILL and BARRIER DONE")
 end
 
 

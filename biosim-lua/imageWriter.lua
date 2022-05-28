@@ -25,7 +25,7 @@ ImageWriter = {
     
 -- // Pushes a new image frame onto .imageList.
 -- //
-saveOneFrameImmed = function( data)
+saveOneFrameImmed = function( data )
 
     -- //using namespace cimg_library;
 
@@ -55,11 +55,11 @@ saveOneFrameImmed = function( data)
 
     local rgbToLuma = function(r, g, b) return (r+r+r+b+g+g+g+g) / 8 end
 
-    for i = 0, #data.indivLocs-1 do
+    for i = 1, #data.indivLocs do
         local c = data.indivColors[i]
         color[0] = (c)                  -- // R: 0..255
         color[1] = bit.lshift(bit.band(c, 0x1f), 3)   -- // G: 0..255
-        color[2] = lit.lshift(bit.band(c, 7), 5)      -- // B: 0..255
+        color[2] = bit.lshift(bit.band(c, 7), 5)      -- // B: 0..255
 
         -- // Prevent color mappings to very bright colors (hard to see):
         if (rgbToLuma(color[0], color[1], color[2]) > maxLumaVal) then
@@ -96,14 +96,16 @@ end
 
 makeGeneticColor = function(genome)
 
-    return bit.bor(bit.bor(bit.bor(bit.bor(bit.bor(bit.bor(bit.bor(bit.band(#genome, 1)
-         , bit.lshift(genome[1].sourceType, 1))
-         , bit.lshift(genome[-1].sourceType, 2))
-         , bit.lshift(genome[1].sinkType, 3))
-         , bit.lshift(genome[-1].sinkType, 4))
-         , bit.lshift(bit.band(genome[1].sourceNum, 1), 5))
-         , bit.lshift(bit.band(genome[1].sinkNum, 1), 6))
-         , bit.lshift(bit.band(genome[-1].sourceNum, 1), 7))
+    local gcount = #genome - 1
+    local val = bit.band(gcount, 1)
+    val = bit.bor(val, bit.lshift(genome[1].sourceType, 1) )
+    val = bit.bor(val, bit.lshift(genome[gcount].sourceType, 2) )
+    val = bit.bor(val, bit.lshift(genome[1].sinkType, 3) )
+    val = bit.bor(val, bit.lshift(genome[gcount].sinkType, 4) )
+    val = bit.bor(val, bit.lshift(bit.band(genome[1].sourceNum, 1), 5))
+    val = bit.bor(val, bit.lshift(bit.band(genome[1].sinkNum, 1), 6))
+    val = bit.bor(val, bit.lshift(bit.band(genome[gcount].sourceNum, 1), 7))
+    return val
 end
 
 

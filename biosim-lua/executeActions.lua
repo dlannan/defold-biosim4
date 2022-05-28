@@ -111,7 +111,7 @@ executeActions = function(indiv, actionLevels)
         level = (math.tanh(level) + 1.0) / 2.0 -- // convert to 0.0..1.0
         level = level * responsivenessAdjusted
         if (level > emitThreshold and prob2bool(level)) then
-            signals.increment(0, indiv.loc)
+            signals:increment(0, indiv.loc)
         end
     end 
 
@@ -180,26 +180,26 @@ executeActions = function(indiv, actionLevels)
     if (isEnabled(Action.MOVE_LEFT)) then
         local level = actionLevels[Action.MOVE_LEFT]
         local ccw = indiv.lastMoveDir:rotate90DegCCW()
-        local offset = Dir.new(ccw):asNormalizedCoord()
+        local offset = ccw:asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
     if (isEnabled(Action.MOVE_RIGHT)) then 
         local level = actionLevels[Action.MOVE_RIGHT]
-        local offset = Dir.new(indiv.lastMoveDir:rotate90DegCW()):asNormalizedCoord()
+        local offset = indiv.lastMoveDir:rotate90DegCW():asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
     if (isEnabled(Action.MOVE_RL)) then 
         local level = actionLevels[Action.MOVE_RL]
-        local offset = Dir.new(indiv.lastMoveDir:rotate90DegCW()):asNormalizedCoord()
+        local offset = indiv.lastMoveDir:rotate90DegCW():asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end 
 
     if (isEnabled(Action.MOVE_RANDOM)) then 
         local level = actionLevels[Action.MOVE_RANDOM]
-        local offset = Dir.new(Dir:random8()):asNormalizedCoord()
+        local offset = Dir:random8():asNormalizedCoord()
         moveX = moveX + offset.x * level
         moveY = moveY + offset.y * level
     end
@@ -226,6 +226,7 @@ executeActions = function(indiv, actionLevels)
 
     -- // Move there if it's a valid location
     local newLoc = indiv.loc:ADDCOORD(movementOffset)
+
     if (grid:isInBounds(newLoc) and grid:isEmptyAt(newLoc)) then 
         peeps:queueForMove(indiv, newLoc)
     end 

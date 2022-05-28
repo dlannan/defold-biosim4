@@ -4,9 +4,6 @@ local Coord = require("biosim-lua.Coord")
 
 tinsert = table.insert
 
-local SIGNAL_MIN = 0
-local SIGNAL_MAX = UINT8_MAX
-
 local Column = {
     Get = function(self, rowNum) return self.data[rowNum] end,
     zeroFill = function(self) 
@@ -71,17 +68,17 @@ Signals.increment = function(self, layerNum, loc)
     local neighborIncreaseAmount = 1
 
     local lfunc = function(loc) 
-        if (self.data[layerNum][loc.x][loc.y] < SIGNAL_MAX) then 
-            self.data[layerNum][loc.x][loc.y] =
-            math.min(SIGNAL_MAX, self.data[layerNum][loc.x][loc.y] + neighborIncreaseAmount)
+        if (self.data[layerNum].data[loc.x].data[loc.y] < SIGNAL_MAX) then 
+            self.data[layerNum].data[loc.x].data[loc.y] =
+            math.min(SIGNAL_MAX, self.data[layerNum].data[loc.x].data[loc.y] + neighborIncreaseAmount)
         end
     end
 
     visitNeighborhood(loc, radius, lfunc)
 
-    if (signals[layerNum][loc.x][loc.y] < SIGNAL_MAX) then 
-        signals[layerNum][loc.x][loc.y] =
-            math.min(SIGNAL_MAX, signals[layerNum][loc.x][loc.y] + centerIncreaseAmount)
+    if (self.data[layerNum].data[loc.x].data[loc.y] < SIGNAL_MAX) then 
+        self.data[layerNum].data[loc.x].data[loc.y] =
+            math.min(SIGNAL_MAX, self.data[layerNum].data[loc.x].data[loc.y] + centerIncreaseAmount)
     end
 end
 
@@ -91,15 +88,15 @@ Signals.zeroFill = function(self)
     end
 end 
 
-Signals.fade = function(layerNum)
+Signals.fade = function(self, layerNum)
     local fadeAmount = 1
 
     for x = 0, p.sizeX -1 do
         for y = 0, p.sizeY -1 do
-            if (signals[layerNum][x][y] >= fadeAmount) then 
-                signals[layerNum][x][y] = signals[layerNum][x][y] - fadeAmount  -- // fade center cell
+            if (self.data[layerNum].data[x].data[y] >= fadeAmount) then 
+                self.data[layerNum].data[x].data[y] = self.data[layerNum].data[x].data[y] - fadeAmount  -- // fade center cell
             else
-                signals[layerNum][x][y] = 0
+                self.data[layerNum].data[x].data[y] = 0
             end 
         end
     end
