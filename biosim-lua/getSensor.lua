@@ -109,7 +109,6 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
     -- // about 2*radius*SIGNAL_MAX (?). We don't adjust for being close to a border,
     -- // so signal densities along borders and in corners are commonly sparser than
     -- // away from borders.
-    -- pprint(dir)
     assert(dir:NEQ(Compass.CENTER)) -- // require a defined axis
 
     local sum = 0.0
@@ -131,7 +130,6 @@ getSignalDensityAlongAxis = function(layerNum, loc, dir)
 
     visitNeighborhood(loc, p.signalSensorRadius, f)
     local maxSumMag = 6.0 * p.signalSensorRadius * SIGNAL_MAX
---    pprint(sum, maxSumMag)
     assert(sum >= -maxSumMag and sum <= maxSumMag)
     local sensorVal = sum / maxSumMag -- // convert to -1.0..1.0
     sensorVal = (sensorVal + 1.0) / 2.0 -- // convert to 0.0..1.0

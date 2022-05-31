@@ -152,7 +152,7 @@ makeRenumberedConnectionList = function(connectionList, genome)
     local ctr = 0
     for k, gene in pairs(genome) do
         local conn = table.shallowcopy(gene)
-        tinsert(connectionList, conn)
+        connectionList[ctr] = conn
 
         if (conn.sourceType == NEURON) then 
             conn.sourceNum = conn.sourceNum % p.maxNumberNeurons
@@ -165,6 +165,7 @@ makeRenumberedConnectionList = function(connectionList, genome)
         else 
             conn.sinkNum = conn.sinkNum % Action.NUM_ACTIONS
         end
+        ctr = ctr + 1
     end 
 end
 
@@ -185,7 +186,7 @@ makeNodeList = function(nodeMap, connectionList)
                 nodeMap[conn.sinkNum] = it
             end
 
-            if (conn.sourceType == NEURON and (conn.sourceNum == conn.sinkNum)) then
+            if ((conn.sourceType == NEURON) and (conn.sourceNum == conn.sinkNum)) then
                 it.numSelfInputs = it.numSelfInputs+1
             else 
                 it.numInputsFromSensorsOrOtherNeurons = it.numInputsFromSensorsOrOtherNeurons + 1
@@ -262,16 +263,18 @@ local randomBitFlip = function(genome)
     local bitIndex8 = bit.lshift(1, randomUint:GetRange(0, 7))
 
     local chance = randomUint:Get() / RANDOM_UINT_MAX -- // 0..1
+    local gn = genome[elementIndex]
+    assert(gn == nil, "[ERROR] "..elementIndex.."   "..table.count(genome))
     if (chance < 0.2) then -- // sourceType
-        genome[elementIndex].sourceType = bit.bxor(genome[elementIndex].sourceType, 1)
+        gn.sourceType = bit.bxor(gn.sourceType, 1)
     elseif (chance < 0.4) then -- // sinkType
-        genome[elementIndex].sinkType = bit.bxor(genome[elementIndex].sinkType, 1)
+        gn.sinkType = bit.bxor(gn.sinkType, 1)
     elseif (chance < 0.6) then -- // sourceNum
-        genome[elementIndex].sourceNum = bit.bxor(genome[elementIndex].sourceNum, bitIndex8)
+        gn.sourceNum = bit.bxor(gn.sourceNum, bitIndex8)
     elseif (chance < 0.8) then -- // sinkNum
-        genome[elementIndex].sinkNum = bit.bxor(genome[elementIndex].sinkNum, bitIndex8)
+        gn.sinkNum = bit.bxor(gn.sinkNum, bitIndex8)
     else -- // weight
-        genome[elementIndex].weight = bit.bxor(genome[elementIndex].weight, bit.lshift(1, randomUint:GetRange(1, 15)) )
+        gn.weight = bit.bxor(gn.weight, bit.lshift(1, randomUint:GetRange(1, 15)) )
     end
 end
 
@@ -293,6 +296,20 @@ local cropLength = function(genome, length)
     end
 end
 
+local copyupgenes = function( genome, insertgene )
+
+    for i=table.count(genome), insertgene+1, -1  do 
+        genome[i] = genome[i-1]
+    end 
+end 
+
+local copydowngenes = function( genome, deletegene )
+
+    for i=deletegene, table.count(genome)-1  do 
+        genome[i] = genome[i+1]
+    end 
+end 
+
 -- // Inserts or removes a single gene from the genome. This is
 -- // used only when the simulator is configured to allow genomes of
 -- // unequal lengths during a simulation.
@@ -302,13 +319,19 @@ local randomInsertDeletion = function(genome)
     if (randomUint:Get() / RANDOM_UINT_MAX < probability) then
         if (randomUint:Get() / RANDOM_UINT_MAX < p.deletionRatio) then
             -- // deletion
-            if (#genome > 1) then 
-                genome[ randomUint:GetRange(0, genome.size() - 1) + 1 ] = nil
+            if (table.count(genome) > 1) then 
+                local deletegene = randomUint:GetRange(0, table.count(genome) - 1)
+                copydowngenes(genome, deletegene)
+                genome[deletegene] = nil
             end
-        elseif (#genome < p.genomeMaxLength) then
-            -- // insertion
-            -- //genome.insert(genome.begin() + randomUint:GetRange(0, genome.size() - 1), makeRandomGene());
-            tinsert(genome, makeRandomGene())
+        else
+            if (table.count(genome) < p.genomeMaxLength) then
+                -- // insertion
+                -- //genome.insert(genome.begin() + randomUint:GetRange(0, genome.size() - 1), makeRandomGene());
+                local insertgene = randomUint:GetRange(0, table.count(genome) - 1)
+                copyupgenes(genome, insertgene)
+                genome[insertgene] = makeRandomGene()
+            end
         end
     end
 end
@@ -318,7 +341,7 @@ end
 -- // by the parameter p.pointMutationRate.
 local applyPointMutations = function(genome)
 
-    local numberOfGenes = #genome
+    local numberOfGenes = table.count(genome)
     while (numberOfGenes > 0) do
         if ((randomUint:Get() / RANDOM_UINT_MAX) < p.pointMutationRate) then
             randomBitFlip(genome)
@@ -331,11 +354,11 @@ end
 -- // If the parameter p.sexualReproduction is true, two parents contribute
 -- // genes to the offspring. The new genome may undergo mutation.
 -- // Must be called in single-thread mode between generations
-local generateChildGenome = function(parentGenomes)
+generateChildGenome = function(parentGenomes)
 
     -- // random parent (or parents if sexual reproduction) with random
     -- // mutations
-    genome = {}
+    local genome = {}
 
     local parent1Idx = 0
     local parent2Idx = 0
@@ -346,25 +369,26 @@ local generateChildGenome = function(parentGenomes)
     -- // true, then we give preference to candidate parents according to their
     -- // score. Their score was computed by the survival/selection algorithm
     -- // in survival-criteria.cpp.
-    if (p.chooseParentsByFitness and #parentGenomes > 1) then
-        parent1Idx = randomUint:GetRange(1, #parentGenomes - 1)
+    if (p.chooseParentsByFitness and table.count(parentGenomes) > 1) then
+        parent1Idx = randomUint:GetRange(1, table.count(parentGenomes)-1)
         parent2Idx = randomUint:GetRange(0, parent1Idx - 1)
     else 
-        parent1Idx = randomUint:GetRange(0, #parentGenomes - 1)
-        parent2Idx = randomUint:GetRange(0, #parentGenomes - 1)
+        parent1Idx = randomUint:GetRange(0, table.count(parentGenomes)-1)
+        parent2Idx = randomUint:GetRange(0, table.count(parentGenomes)-1)
     end
 
     local g1 = parentGenomes[parent1Idx]
     local g2 = parentGenomes[parent2Idx]
 
-    if (g1 == nil or g2 == nil) then
+    if ((g1 == nil) or (g2 == nil)) then
         print("invalid genome")
+        pprint(g1, g2)
         assert(false)
     end
 
     local overlayWithSliceOf = function(gShorter) 
-        local index0 = randomUint:GetRange(0, #gShorter - 1)
-        local index1 = randomUint:GetRange(0, #gShorter)
+        local index0 = randomUint:GetRange(0, table.count(gShorter) - 1)
+        local index1 = randomUint:GetRange(0, table.count(gShorter) )
         if (index0 > index1) then 
             local temp = index0
             index0 = index1
@@ -376,34 +400,34 @@ local generateChildGenome = function(parentGenomes)
     end
 
     if (p.sexualReproduction) then 
-        if (#g1 > #g2) then
+        if (table.count(g1) > table.count(g2)) then
             genome = g1
             overlayWithSliceOf(g2)
-            assert(#genome > 0)
+            assert(table.count(genome) > 0)
         else 
             genome = g2
             overlayWithSliceOf(g1)
-            assert(#genome > 0)
+            assert(table.count(genome) > 0)
         end
 
         -- // Trim to length = average length of parents
-        local sum = #g1 + #g2;
+        local sum = table.count(g1) + table.count(g2)
         -- // If average length is not an integral number, add one half the time
         if (bit.band(sum, 1) and bit.band(randomUint:Get(), 1)) then
             sum = sum + 1
         end
         cropLength(genome, sum / 2)
-        assert(#genome>0)
+        assert(table.count(genome)>0)
     else
         genome = g2
-        assert(#genome>0)
+        assert(table.count(genome)>0)
     end
 
     randomInsertDeletion(genome)
-    assert(#genome > 0)
+    assert(table.count(genome) > 0)
     applyPointMutations(genome)
-    assert(#genome > 0)
-    assert(#genome <= p.genomeMaxLength)
+    assert(table.count(genome) > 0)
+    assert(table.count(genome) <= p.genomeMaxLength)
 
     return genome
 end

@@ -19,7 +19,7 @@ function table.shallowcopy(orig)
     if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in pairs(orig) do
-            copy[orig_key] = orig_value
+            if(orig_value) then copy[orig_key] = orig_value end 
         end
     else -- number, string, boolean, etc
         copy = orig
@@ -36,7 +36,7 @@ function table.count( t)
     if(type(t) ~= "table") then return 0 end
     local count = 0
     for k,v in pairs(t) do 
-        count = count + 1
+        if(v) then count = count + 1 end
     end 
     return count 
 end 

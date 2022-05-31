@@ -1,3 +1,4 @@
+
 -- // This converts sensor numbers to descriptive strings.
 local sensorNameFunc = {
     [Sensor.AGE ] = function() return "age" end,
@@ -206,7 +207,8 @@ averageGenomeLength = function()
     sum = 0
 
     while (count > 0) do
-        sum = sum + peeps:getIndivIndex(randomUint:GetRange(1, p.population)).genome:size()
+        local gnome = peeps:getIndivIndex(randomUint:GetRange(1, p.population)).genome
+        sum = sum + table.count(gnome)
         numberSamples = numberSamples + 1
         count = count - 1
     end 
@@ -222,11 +224,11 @@ appendEpochLog = function(generation, numberSurvivors, murderCount)
     local foutput
 
     if (generation == 0) then
-        foutput = io.open(p.logDir + "/epoch-log.txt", "r")
+        foutput = io.open(p.logDir.."/epoch-log.txt", "r")
         foutput = io.close()
     end 
 
-    foutput = io.open(p.logDir + "/epoch-log.txt", "a")
+    foutput = io.open(p.logDir .."/epoch-log.txt", "a")
     if(foutput) then
         foutput:write( tostring(generation).." "..tostring(numberSurvivors).." "
             ..tostring(geneticDiversity()).." "..tostring(averageGenomeLength()).." "..tostring(murderCount).."\n")

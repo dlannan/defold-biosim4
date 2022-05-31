@@ -1,6 +1,7 @@
 local tinsert = table.insert
 
 local inifile = require('utils.inifile')
+local inifile = require('utils.table')
 
 -- Add the path - make requires simpler.
 local sim 		= require("biosim-lua.simulator")
@@ -253,7 +254,7 @@ end
 
 function update(self, dt)
 
-	sim.simulationStep()
+	local count = sim.simulationStep()
 
 	imgui.set_next_window_pos( 5, 5 )
 	imgui.set_next_window_size(330 * WINDOW_SCALE, 630 * WINDOW_SCALE)
@@ -314,12 +315,11 @@ function update(self, dt)
 	local genstats 	= {}
 	local newgen 	= nil
 	--	local count = biosim.SimulationStep(agents, genstats)
-	genstats = { 0, 0, 0 }
-
 	-- generation = genstats[1]
 	-- survivors = genstats[2]
-	diversity = geneticDiversity()
-	print(generation, survivors, diversity)
+
+	local diversity = geneticDiversity()
+	-- print(generation, survivors, diversity)
 
 	-- Process previous generation
 	if(self.generation ~= generation) then 
@@ -332,7 +332,7 @@ function update(self, dt)
 		self.diversity_hist[generation] = diversity
 		self.dataStore  = {}
 	end 
--- print(count, generation, survivors)
+    print(count, generation, survivors)
 
 	if(count == self.popdatacount) then 
 		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)

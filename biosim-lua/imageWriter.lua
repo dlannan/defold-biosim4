@@ -55,7 +55,7 @@ saveOneFrameImmed = function( data )
 
     local rgbToLuma = function(r, g, b) return (r+r+r+b+g+g+g+g) / 8 end
 
-    for i = 1, #data.indivLocs do
+    for i = 1, table.count(data.indivLocs) do
         local c = data.indivColors[i]
         color[0] = (c)                  -- // R: 0..255
         color[1] = bit.lshift(bit.band(c, 0x1f), 3)   -- // G: 0..255
@@ -129,12 +129,13 @@ ImageWriter.saveVideoFrame = function(self, simStep, generation)
         -- // We cache a local copy of data from params, grid, and peeps because
         -- // those objects will change by the main thread at the same time our
         -- // saveFrameThread() is using it to output a video frame.
-        self.data.simStep = simStep
-        self.data.generation = generation
-        self.data.indivLocs = {}
-        self.data.indivColors = {}
-        self.data.barrierLocs = {}
-        self.data.signalLayers = {}
+        self.data.simStep       = simStep
+        self.data.generation    = generation
+        self.data.indivLocs     = {}
+        self.data.indivColors   = {}
+        self.data.barrierLocs   = {}
+        self.data.signalLayers  = {}
+
         -- //todo!!!
         for index = 1, p.population do
             indiv = peeps:getIndivIndex(index)
@@ -184,8 +185,8 @@ ImageWriter.saveVideoFrameSync = function(self, simStep, generation)
         tinsert(self.data.barrierLocs, loc)
     end 
 
-    saveOneFrameImmed(self.data)
-    return true
+    -- saveOneFrameImmed(self.data)
+    return false
 end 
 
 ImageWriter.saveGenerationVideo = function(self, generation) 
@@ -202,7 +203,7 @@ ImageWriter.saveGenerationVideo = function(self, generation)
     -- //         std::cout << "Video skipped " << skippedFrames << " frames" << std::endl;
     -- //     }
     -- // }
-    startNewGeneration()
+    imageWriter:startNewGeneration()
 end 
 
 ImageWriter.abort = function(self) 

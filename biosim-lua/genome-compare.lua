@@ -1,6 +1,4 @@
 
-
-
 -- // Approximate gene match: Has to match same source, sink, with similar weight
 -- //
 genesMatch = function(g1, g2)
@@ -11,7 +9,6 @@ genesMatch = function(g1, g2)
         and g1.sourceType == g2.sourceType
         and g1.weight == g2.weight
 end
-
 
 -- // The jaro_winkler_distance() function is adapted from the C version at
 -- // https://github.com/miguelvps/c/blob/master/jarowinkler.c
@@ -80,11 +77,10 @@ jaro_winkler_distance = function(genome1, genome2)
     return dw
 end
 
-
 -- // Works only for genomes of equal length
 hammingDistanceBits = function(genome1, genome2)
 
-    assert(#genome1 == #genome2)
+    assert(table.count(genome1) == table.count(genome2), "[ERROR] g1:"..table.count(genome1).."   g2:"..table.count(genome2))
 
     local p1 = genome1
     local p2 = genome2
@@ -122,7 +118,6 @@ genomeSimilarity = function(g1, g2)
         assert(false)
     end
 end
-
 
 -- // returns 0.0..1.0
 -- // Samples random pairs of individuals regardless if they are alive or not

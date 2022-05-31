@@ -82,10 +82,11 @@ Indiv.feedForward = function(self, simStep)
     -- // return value optimization.
     local actionLevels = {}
     for i=0, Action.NUM_ACTIONS do actionLevels[i] = 0.0 end -- // undriven actions default to value 0.0
+    
     -- // Weighted inputs to each neuron are summed in neuronAccumulators[]
     local neuronAccumulators = {}
     local neuronCount = table.count(self.nnet.neurons)
-    for i = 0, neuronCount do neuronAccumulators[i] = 0.0 end 
+    for i = 0, neuronCount-1 do neuronAccumulators[i] = 0.0 end 
 
     -- // Connections were ordered at birth so that all connections to neurons get
     -- // processed here before any connections to actions. As soon as we encounter the
@@ -101,7 +102,7 @@ Indiv.feedForward = function(self, simStep)
             -- // start on the connections to the action outputs, so now it's time to
             -- // update and latch all the neuron outputs to their proper range (-1.0..1.0)
 
-            for neuronIndex = 0, neuronCount -1 do
+            for neuronIndex = 0, neuronCount-1 do
                 if (self.nnet.neurons[neuronIndex].driven) then
                     self.nnet.neurons[neuronIndex].output = math.tanh(neuronAccumulators[neuronIndex])
                 end 
@@ -124,7 +125,6 @@ Indiv.feedForward = function(self, simStep)
         if (conn.sinkType == ACTION) then           
             actionLevels[conn.sinkNum] = actionLevels[conn.sinkNum] + inputVal * conn:weightAsFloat()
         else 
-            -- pprint(conn.sinkNum, table.count(neuronAccumulators) )
             assert(neuronAccumulators[conn.sinkNum] ~= nil, "conn.sinkNum: "..conn.sinkNum.."    "..table.count(neuronAccumulators))
             neuronAccumulators[conn.sinkNum] = neuronAccumulators[conn.sinkNum] + inputVal * conn:weightAsFloat()
         end 
@@ -322,7 +322,7 @@ Indiv.printGenome = function(self)
 
     local genesPerLine = 8
     local count = 0
-    for k,gene in pairs(self.genome) do
+    for k, gene in pairs(self.genome) do
         if (count == genesPerLine) then 
             io.write("\n")
             count = 0
@@ -439,7 +439,7 @@ Indiv.createWiringFromGenome = function(self)
             local newConn = table.shallowcopy(conn)
             tinsert(self.nnet.connections, newConn)
             -- // fix the destination neuron number
-            local newConnsinkNum = nodeMap[newConn.sinkNum].remappedNumber
+            newConn.sinkNum = nodeMap[newConn.sinkNum].remappedNumber
             -- // if the source is a neuron, fix its number too    
             if (newConn.sourceType == NEURON) then
                 newConn.sourceNum = nodeMap[newConn.sourceNum].remappedNumber

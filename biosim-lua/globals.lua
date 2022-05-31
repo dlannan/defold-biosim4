@@ -10,9 +10,9 @@ randomUint = require("biosim-lua.random")
 
 require("biosim-lua.sensor-actions")
 
-grid = require("biosim-lua.grid")       -- // The 2D world where the creatures live
-signals = require("biosim-lua.signals") -- // A 2D array of pheromones that overlay the world grid
-peeps = require("biosim-lua.peeps")     -- // The container of all the individuals in the population
+grid        = require("biosim-lua.grid")        -- // The 2D world where the creatures live
+signals     = require("biosim-lua.signals")     -- // A 2D array of pheromones that overlay the world grid
+peeps       = require("biosim-lua.peeps")       -- // The container of all the individuals in the population
 imageWriter = require("biosim-lua.imageWriter") -- // This is for generating the movies
 
 -- // The paramManager maintains a private copy of the parameter values, and a copy
@@ -20,7 +20,6 @@ imageWriter = require("biosim-lua.imageWriter") -- // This is for generating the
 -- // foolproof, you should be able to modify the config file during a simulation
 -- // run and modify many of the parameters. See params.cpp and params.h for more info.
 local paramManager = require("biosim-lua.params")
-
 
 -- Global run state - this is mainly for threads when it was in C++. May remove
 runMode = RunMode.STOP
@@ -35,3 +34,4 @@ require("biosim-lua.genome-neurons")
 require("biosim-lua.genome-compare")
 require("biosim-lua.getSensor")
 require("biosim-lua.executeActions")
+require("biosim-lua.survival-criteria")

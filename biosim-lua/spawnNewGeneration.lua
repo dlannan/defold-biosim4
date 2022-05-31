@@ -20,7 +20,6 @@ initializeGeneration0 = function()
     pprint("ZERO FILL and BARRIER DONE")
 end
 
-
 -- // Requires a container with one or more parent genomes to choose from.
 -- // Called from spawnNewGeneration(). This requires that the grid, signals, and
 -- // peeps containers have been allocated. This will erase the grid and signal
@@ -76,7 +75,7 @@ spawnNewGeneration = function(generation, murderCount)
             -- // ToDo: if the parents no longer need their genome record, we could
             -- // possibly do a move here instead of copy, although it's doubtful that
             -- // the optimization would be noticeable.
-            if (passed.first and not peeps:getIndivIndex(index).nnet.connections:empty()) then
+            if (passed[1] and table.count(peeps:getIndivIndex(index).nnet.connections) > 0) then
                 tinsert(parents, { index, passed[2] } )
             end 
         end 
@@ -133,15 +132,15 @@ spawnNewGeneration = function(generation, murderCount)
                         end 
                     end 
                 end 
-                print(tostring(#parents).." passed, "..
-                            tostring(#sacrificesIndexes).." sacrificed, "..
-                            tostring(#survivingKin).." saved" )
+                -- print(tostring(#parents).." passed, "..
+                --             tostring(#sacrificesIndexes).." sacrificed, "..
+                --             tostring(#survivingKin).." saved" )
                 parents = survivingKin
             end 
         else 
             -- // Limit the parent list
             local numberSaved = sacrificedCount * altruismFactor
-            print( tostring(#parents).." passed, "..sacrificedCount.." sacrificed, "..numberSaved.." saved")
+            -- print( tostring(#parents).." passed, "..sacrificedCount.." sacrificed, "..numberSaved.." saved")
             if (#parents == 0 and numberSaved < #parents) then 
                 for i = 0, numberSaved do parents[i] = nil end 
             end 
@@ -154,17 +153,19 @@ spawnNewGeneration = function(generation, murderCount)
     -- // Assemble a list of all the parent genomes. These will be ordered by their
     -- // scores if the parents[] container was sorted by score
     parentGenomes = {}
+    local ctr = 0
     for k, parent in ipairs(parents) do
-        tinsert(parentGenomes, peeps:getIndivIndex(parent[1]).genome)
+        parentGenomes[ctr] = peeps:getIndivIndex(parent[1]).genome
+        ctr = ctr + 1
     end
 
     -- // std::cout << "Gen " << generation << ", " << parentGenomes.size() << " survivors" << std::endl;
-    appendEpochLog(generation, #parentGenomes, murderCount)
+--    appendEpochLog(generation, table.count(parentGenomes), murderCount)
     -- //displaySignalUse(); // for debugging only
 
     -- // Now we have a container of zero or more parents' genomes
 
-    if (#parentGenomes > 0) then 
+    if (table.count(parentGenomes) > 0) then 
         -- // Spawn a new generation
         initializeNewGeneration(parentGenomes, generation + 1)
     else

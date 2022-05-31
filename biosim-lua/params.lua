@@ -79,7 +79,7 @@ ParamManager.setDefaults = function(self)
     privParams.logDir = "data/logs/"
     privParams.imageDir = "data/images/"
     privParams.population = 3000
-    privParams.stepsPerGeneration = 300
+    privParams.stepsPerGeneration = 50
     privParams.maxGenerations = 200000
     privParams.barrierType = 0
     privParams.numThreads = 4
@@ -141,6 +141,7 @@ ParamManager.updateFromConfigFile = function(self, generationNumber)
     local tbl = inifile.load(self.privParams.configFilename)
     -- Iterate the config file and overwrite the params manager config
     for k,v in pairs(tbl.default) do 
+        if(self.privParams[v.value]) then v.value = self.privParams[v.value] end
         self.privParams[v.key] = v.value 
     end 
 end 

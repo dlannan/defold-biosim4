@@ -3,9 +3,7 @@
 -- // not so much. Fine-tune the challenges by tweaking the corresponding code
 -- // in survival-criteria.cpp.
 
-require("biosim-lua.globals")
-
-local Sim = {}
+Sim = {}
 
 Sim.CHALLENGE_CIRCLE = 0
 Sim.CHALLENGE_RIGHT_HALF = 1
@@ -27,6 +25,8 @@ Sim.CHALLENGE_PAIRS = 15
 Sim.CHALLENGE_LOCATION_SEQUENCE = 16
 Sim.CHALLENGE_ALTRUISM = 17
 Sim.CHALLENGE_ALTRUISM_SACRIFICE = 18
+
+require("biosim-lua.globals")
 
 -- /*
 -- At the end of each sim step, this function is called in single-thread
@@ -109,6 +109,7 @@ endOfSimStep = function( simStep, generation)
         if (imageWriter:saveVideoFrameSync(simStep, generation)) then
             print("imageWriter busy")
         end 
+
         -- if (!imageWriter.saveVideoFrame(simStep, generation)) {
         --     print("imageWriter busy")
         -- end 
@@ -187,13 +188,11 @@ simStep     = 0
 local DoSimStep = function( _ctx )
 
     -- randomUint:initialize() -- // seed the RNG, each thread has a private instance
-
     if(generation < p.maxGenerations) then -- // generation loop
 
         if(runMode == RunMode.RUN) then 
             murderCount = 0 -- // for reporting purposes
-
-            for simStep = 0, p.stepsPerGeneration-1 do
+            if(simStep < p.stepsPerGeneration) then
             
                 -- // multithreaded loop: index 0 is reserved, start at 1
                 for indivIndex = 1, p.population do
@@ -206,19 +205,27 @@ local DoSimStep = function( _ctx )
                 -- // updates signal layers (pheromone), etc.
                 murderCount = murderCount + peeps:deathQueueSize()
                 endOfSimStep(simStep, generation)
+
+                simStep = simStep + 1
             end
 
-            endOfGeneration(generation)
-            p:updateFromConfigFile(generation + 1)
-            local numberSurvivors = spawnNewGeneration(generation, murderCount)
-            -- // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
-            -- //     displaySampleGenomes(p.displaySampleGenomes)
-            -- // }
-            survivors = numberSurvivors
-            if (numberSurvivors == 0) then 
-                generation = 0  -- // start over
-            else
-                generation = generation + 1
+            print(simStep, p.stepsPerGeneration)
+            if(simStep >= p.stepsPerGeneration) then 
+                endOfGeneration(generation)
+                p:updateFromConfigFile(generation + 1)
+                local numberSurvivors = spawnNewGeneration(generation, murderCount)
+                -- // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
+                -- //     displaySampleGenomes(p.displaySampleGenomes)
+                -- // }
+                print("survivors:"..numberSurvivors)
+                survivors = numberSurvivors
+                if (numberSurvivors == 0) then 
+                    generation = 0  -- // start over
+                else
+                    generation = generation + 1
+                end
+
+                simStep = 0
             end
         end
 
@@ -226,6 +233,7 @@ local DoSimStep = function( _ctx )
         --     break
         -- end 
     end 
+    return p.population, generation
 end 
 
 -- /********************************************************************************
@@ -265,10 +273,11 @@ Sim.simulator = function(self, filename)
 end 
 
 Sim.simulationStep = function( void )
-    DoSimStep()
+    return DoSimStep()
 end 
 
 Sim.simulationDone = function( void )
+
     displaySampleGenomes(3)     -- // final report, for debugging
     print("Simulator exit.")
 end 

@@ -1,6 +1,4 @@
 
-
-
  RandomUintGenerator = {
         -- // for the Marsaglia algorithm
         rngx    = 0.0,
@@ -106,7 +104,7 @@ end
 -- // object here, but we would first need to investigate its overhead.
 -- //
 RandomUintGenerator.GetRange = function(self, min, max)
-    assert(max >= min)
+    assert(max >= min, "[ MIN MAX ] "..min.."   "..max)
     local tmp = self:Get()
     return tmp % (max - min + 1) + min
 end

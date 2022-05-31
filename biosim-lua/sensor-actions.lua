@@ -1,5 +1,4 @@
 
-
 SENSOR = 1 -- // always a source
 ACTION = 1 -- // always a sink
 NEURON = 0 -- // can be either a source or sink
