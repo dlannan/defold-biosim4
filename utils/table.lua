@@ -87,6 +87,16 @@ function table.extract(arr, fname)
     return result
 end
 
+--
+-- Reindex table from 1->table len so that there are no gaps
+--
+function table.reindex( tbl )
+    local newtbl = {}
+    for i = 1, #tbls do
+        table.insert(newtbl, tbl[i])
+    end 
+    return newtbl
+end
 
 --
 -- Enumerates an array of objects and returns a new table containing
@@ -302,7 +312,7 @@ function table.insertsorted(tbl, value, fn)
         local minindex = 1
         local maxindex = #tbl + 1
         while minindex < maxindex do
-            local index = minindex + ((maxindex - minindex) >> 1)
+            local index = minindex + bit.rshift(maxindex - minindex, 1)
             local test = tbl[index]
             if fn(value, test) then
                 maxindex = index

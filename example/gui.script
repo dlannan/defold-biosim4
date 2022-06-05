@@ -1,7 +1,7 @@
 local tinsert = table.insert
 
 local inifile = require('utils.inifile')
-local inifile = require('utils.table')
+require('utils.table')
 
 -- Add the path - make requires simpler.
 local sim 		= require("biosim-lua.simulator")

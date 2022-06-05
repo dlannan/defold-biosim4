@@ -75,7 +75,7 @@ spawnNewGeneration = function(generation, murderCount)
             -- // ToDo: if the parents no longer need their genome record, we could
             -- // possibly do a move here instead of copy, although it's doubtful that
             -- // the optimization would be noticeable.
-            if (passed[1] and table.count(peeps:getIndivIndex(index).nnet.connections) > 0) then
+            if (passed[1] and #(peeps:getIndivIndex(index).nnet.connections) > 0) then
                 tinsert(parents, { index, passed[2] } )
             end 
         end 
@@ -91,12 +91,12 @@ spawnNewGeneration = function(generation, murderCount)
         for index = 1, p.population do
             -- // This the test for the spawning area:
             local passed = passedSurvivalCriterion(peeps:getIndivIndex(index), CHALLENGE_ALTRUISM)
-            if (passed[1] and not peeps:getIndivIndex(index).nnet.connections:empty()) then
+            if (passed[1] and table.isempty(peeps:getIndivIndex(index).nnet.connections) == false) then
                 tinsert(parents, { index, passed[2] } )
             else
                 -- // This is the test for the sacrificial area:
                 passed = passedSurvivalCriterion(peeps:getIndivIndex(index), CHALLENGE_ALTRUISM_SACRIFICE);
-                if (passed[1] and not peeps:getIndivIndex(index).nnet.connections:empty()) then
+                if (passed[1] and table.isempty(peeps:getIndivIndex(index).nnet.connections) == false) then
                     if (considerKinship) then
                         tinsert(sacrificesIndexes, index)
                     else 
@@ -165,7 +165,7 @@ spawnNewGeneration = function(generation, murderCount)
 
     -- // Now we have a container of zero or more parents' genomes
 
-    if (table.count(parentGenomes) > 0) then 
+    if (#parentGenomes > 0) then 
         -- // Spawn a new generation
         initializeNewGeneration(parentGenomes, generation + 1)
     else

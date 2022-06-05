@@ -32,7 +32,7 @@ Indiv.initialize = function(self, index, loc, genome)
     self.responsiveness = 0.5 -- // range 0.0..1.0
     self.longProbeDist = p.longProbeDistance
     self.challengeBits = false -- // will be set true when some task gets accomplished
-    self.genome = table.shallowcopy(genome)
+    self.genome = table.deepcopy(genome)
     self.lastMoveDir = Dir.random8()
 
     self:createWiringFromGenome()
@@ -420,7 +420,7 @@ Indiv.createWiringFromGenome = function(self)
     -- // The neurons map now has all the referenced neurons, their neuron numbers, and
     -- // the number of outputs for each neuron. Now we'll renumber the neurons
     -- // starting at zero.
-    assert(table.count(nodeMap) <= p.maxNumberNeurons)
+    assert(#nodeMap <= p.maxNumberNeurons)
     local newNumber = 0
     for k,node in pairs(nodeMap) do
         assert(node.numOutputs ~= 0)
@@ -439,8 +439,9 @@ Indiv.createWiringFromGenome = function(self)
             local newConn = table.shallowcopy(conn)
             tinsert(self.nnet.connections, newConn)
             -- // fix the destination neuron number
+            pprint(nodeMap, newConn)
             newConn.sinkNum = nodeMap[newConn.sinkNum].remappedNumber
-            -- // if the source is a neuron, fix its number too    
+            -- // if the source is a neuron, fix its number too              
             if (newConn.sourceType == NEURON) then
                 newConn.sourceNum = nodeMap[newConn.sourceNum].remappedNumber
             end

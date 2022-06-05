@@ -135,7 +135,7 @@ makeRandomGenome = function()
     local genome = {}
 
     local length = randomUint:GetRange(p.genomeInitialLengthMin, p.genomeInitialLengthMax)
-    for n = 0, length-1 do 
+    for n = 1, length do 
         tinsert(genome, makeRandomGene())
     end 
 
@@ -150,9 +150,8 @@ end
 makeRenumberedConnectionList = function(connectionList, genome)
 
     local ctr = 0
-    for k, gene in pairs(genome) do
+    for k, gene in ipairs(genome) do
         local conn = table.shallowcopy(gene)
-        connectionList[ctr] = conn
 
         if (conn.sourceType == NEURON) then 
             conn.sourceNum = conn.sourceNum % p.maxNumberNeurons
@@ -165,7 +164,7 @@ makeRenumberedConnectionList = function(connectionList, genome)
         else 
             conn.sinkNum = conn.sinkNum % Action.NUM_ACTIONS
         end
-        ctr = ctr + 1
+        table.insert(connectionList, conn)
     end 
 end
 
@@ -194,7 +193,7 @@ makeNodeList = function(nodeMap, connectionList)
             -- assert(nodeMap.count(conn.sinkNum) == 1);
         end
         if (conn.sourceType == NEURON) then 
-            it = nodeMap[conn.sourceNum]
+            local it = nodeMap[conn.sourceNum]
             if (it == nil) then 
                 assert(conn.sourceNum < p.maxNumberNeurons)
                 it = Node.new()
@@ -219,12 +218,12 @@ local removeConnectionsToNeuron = function(connections, nodeMap, neuronNumber)
             -- // Remove the connection. If the connection source is from another
             -- // neuron, also decrement the other neuron's numOutputs:
             if (itConn.sourceType == NEURON) then
-                --(nodeMap[itConn->sourceNum].numOutputs);
+                nodeMap[itConn.sourceNum].numOutputs = nodeMap[itConn.sourceNum].numOutputs - 1
             end 
             tinsert(forRemoval, k)
         end
     end
-    for k,v in pairs(forRemoval) do connections[v] = nil end
+    for k,v in pairs(forRemoval) do table.remove(connections, v) end 
 end
 
 
@@ -238,19 +237,20 @@ cullUselessNeurons = function(connections, nodeMap)
     while (allDone == false) do
         allDone = true
         local forRemoval = {}
+
         for k,itNeuron in pairs(nodeMap) do
-            assert(k < p.maxNumberNeurons)
+            assert(k < p.maxNumberNeurons, "[ERROR]"..k.."    "..p.maxNumberNeurons)
             -- // We're looking for neurons with zero outputs, or neurons that feed itself
             -- // and nobody else:
             if (itNeuron.numOutputs == itNeuron.numSelfInputs) then --  // could be 0
                 allDone = false
                 -- // Find and remove connections from sensors or other neurons
                 removeConnectionsToNeuron(connections, nodeMap, k)
-                tinsert(forRemoval, k)
+                tinsert(forRemoval, k)  
             end
         end
 
-        for k,v in pairs(forRemoval) do nodeMap[v] = nil end 
+        for k,v in pairs(forRemoval) do table.remove(nodeMap, v) end 
     end
 end
     
@@ -259,12 +259,12 @@ end
 local randomBitFlip = function(genome)
 
     --local byteIndex = randomUint:GetRange(0, #genome - 1) * sizeof(Gene)
-    local elementIndex = randomUint:GetRange(0, table.count(genome) - 1)
+    local elementIndex = randomUint:GetRange(1, #genome)
     local bitIndex8 = bit.lshift(1, randomUint:GetRange(0, 7))
 
     local chance = randomUint:Get() / RANDOM_UINT_MAX -- // 0..1
     local gn = genome[elementIndex]
-    assert(gn == nil, "[ERROR] "..elementIndex.."   "..table.count(genome))
+    assert(gn ~= nil, "[ERROR] "..tostring(gn).."   "..elementIndex.."   "..#genome)
     if (chance < 0.2) then -- // sourceType
         gn.sourceType = bit.bxor(gn.sourceType, 1)
     elseif (chance < 0.4) then -- // sinkType
@@ -288,10 +288,10 @@ local cropLength = function(genome, length)
         if (randomUint:Get() / RANDOM_UINT_MAX < 0.5) then
             -- // trim front
             local numberElementsToTrim = #genome - length
-            for i=1, numberElementsToTrim do genome[i] = nil end 
+            for i=1, numberElementsToTrim do table.remove(genome, i) end 
         else 
             -- // trim back
-            for i= #genome - length, #genome do genome[i] = nil end 
+            for i= #genome - length, #genome do table.remove(genome,i) end 
         end
     end
 end
@@ -299,7 +299,7 @@ end
 local copyupgenes = function( genome, insertgene )
 
     for i=table.count(genome), insertgene+1, -1  do 
-        genome[i] = genome[i-1]
+        table.insert(genome, i, genome[i])
     end 
 end 
 
@@ -322,7 +322,7 @@ local randomInsertDeletion = function(genome)
             if (table.count(genome) > 1) then 
                 local deletegene = randomUint:GetRange(0, table.count(genome) - 1)
                 copydowngenes(genome, deletegene)
-                genome[deletegene] = nil
+                table.remove(genome, deletegene)
             end
         else
             if (table.count(genome) < p.genomeMaxLength) then
@@ -330,7 +330,7 @@ local randomInsertDeletion = function(genome)
                 -- //genome.insert(genome.begin() + randomUint:GetRange(0, genome.size() - 1), makeRandomGene());
                 local insertgene = randomUint:GetRange(0, table.count(genome) - 1)
                 copyupgenes(genome, insertgene)
-                genome[insertgene] = makeRandomGene()
+                table.insert(genome, insertgene, makeRandomGene())
             end
         end
     end
@@ -341,7 +341,7 @@ end
 -- // by the parameter p.pointMutationRate.
 local applyPointMutations = function(genome)
 
-    local numberOfGenes = table.count(genome)
+    local numberOfGenes = #genome
     while (numberOfGenes > 0) do
         if ((randomUint:Get() / RANDOM_UINT_MAX) < p.pointMutationRate) then
             randomBitFlip(genome)
@@ -370,11 +370,11 @@ generateChildGenome = function(parentGenomes)
     -- // score. Their score was computed by the survival/selection algorithm
     -- // in survival-criteria.cpp.
     if (p.chooseParentsByFitness and table.count(parentGenomes) > 1) then
-        parent1Idx = randomUint:GetRange(1, table.count(parentGenomes)-1)
-        parent2Idx = randomUint:GetRange(0, parent1Idx - 1)
+        parent1Idx = randomUint:GetRange(1, #parentGenomes)
+        parent2Idx = randomUint:GetRange(1, parent1Idx)
     else 
-        parent1Idx = randomUint:GetRange(0, table.count(parentGenomes)-1)
-        parent2Idx = randomUint:GetRange(0, table.count(parentGenomes)-1)
+        parent1Idx = randomUint:GetRange(1, #parentGenomes)
+        parent2Idx = randomUint:GetRange(1, #parentGenomes)
     end
 
     local g1 = parentGenomes[parent1Idx]

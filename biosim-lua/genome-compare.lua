@@ -3,11 +3,11 @@
 -- //
 genesMatch = function(g1, g2)
 
-    return g1.sinkNum == g2.sinkNum
-        and g1.sourceNum == g2.sourceNum
-        and g1.sinkType == g2.sinkType
-        and g1.sourceType == g2.sourceType
-        and g1.weight == g2.weight
+    return (g1.sinkNum == g2.sinkNum)
+        and (g1.sourceNum == g2.sourceNum)
+        and (g1.sinkType == g2.sinkType)
+        and (g1.sourceType == g2.sourceType)
+        and (g1.weight == g2.weight)
 end
 
 -- // The jaro_winkler_distance() function is adapted from the C version at
@@ -27,8 +27,8 @@ jaro_winkler_distance = function(genome1, genome2)
 
     local i, j, l
     local m, t = 0, 0
-    local sl = #s -- // strlen(s);
-    local al = #a -- // strlen(a);
+    local sl = table.count(s) -- // strlen(s);
+    local al = table.count(a) -- // strlen(a);
 
     local maxNumGenesToCompare = 20
     sl = math.min(maxNumGenesToCompare, sl) -- // optimization: approximate for long genomes
@@ -44,7 +44,7 @@ jaro_winkler_distance = function(genome1, genome2)
     for i = 0, al-1 do
         local l = math.min(i + range + 1, sl)
         for j = math.max(i - range, 0), l-1 do
-            if (genesMatch(a[i], s[j]) and not sflags[j]) then
+            if (genesMatch(a[i], s[j]) and (sflags[j] == 0)) then
                 sflags[j] = 1
                 aflags[i] = 1
                 m = m + 1
@@ -53,7 +53,7 @@ jaro_winkler_distance = function(genome1, genome2)
         end
     end
 
-    if (not m) then return 0.0 end 
+    if (m == 0) then return 0.0 end 
 
     -- /* calculate character transpositions */
     local l = 0
@@ -65,7 +65,7 @@ jaro_winkler_distance = function(genome1, genome2)
                     break
                 end
             end 
-            if (not genesMatch(a[i], s[j])) then
+            if (genesMatch(a[i], s[j]) == false) then
                 t = t + 1
             end 
         end 
@@ -80,18 +80,18 @@ end
 -- // Works only for genomes of equal length
 hammingDistanceBits = function(genome1, genome2)
 
-    assert(table.count(genome1) == table.count(genome2), "[ERROR] g1:"..table.count(genome1).."   g2:"..table.count(genome2))
+    assert(#genome1 == #genome2, "[ERROR] g1:"..#genome1.."   g2:"..#genome2)
 
     local p1 = genome1
     local p2 = genome2
 
-    local numElements = #genome1
+    local numElements = table.count(genome1)
     local bytesPerElement = 4
     local lengthBytes = numElements * bytesPerElement
     local lengthBits = lengthBytes * 8
     local bitCount = 0
 
-    for index = 1, #genome1 do 
+    for index = 1, numElements do 
         -- print(p1[index]:GetData(), p2[index]:GetData())
         bitCount = bitCount + bit.bxor(p1[index]:GetData(), p2[index]:GetData())
     end
