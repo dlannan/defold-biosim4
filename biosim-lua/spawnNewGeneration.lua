@@ -64,7 +64,7 @@ spawnNewGeneration = function(generation, murderCount)
     local parents = {} -- // <indiv index, score>
 
     -- // This container will hold the genomes of the survivors
-    local parentGenomes = {}
+    local parentGenomes = Genome_new()
 
     if (p.challenge ~= CHALLENGE_ALTRUISM) then 
         -- // First, make a list of all the individuals who will become parents; save
@@ -152,7 +152,7 @@ spawnNewGeneration = function(generation, murderCount)
 
     -- // Assemble a list of all the parent genomes. These will be ordered by their
     -- // scores if the parents[] container was sorted by score
-    parentGenomes = {}
+    parentGenomes = Genome_new()
     local ctr = 0
     for k, parent in ipairs(parents) do
         parentGenomes[ctr] = peeps:getIndivIndex(parent[1]).genome
@@ -165,7 +165,7 @@ spawnNewGeneration = function(generation, murderCount)
 
     -- // Now we have a container of zero or more parents' genomes
 
-    if (#parentGenomes > 0) then 
+    if (parentGenomes:count() > 0) then 
         -- // Spawn a new generation
         initializeNewGeneration(parentGenomes, generation + 1)
     else

@@ -96,15 +96,15 @@ end
 
 makeGeneticColor = function(genome)
 
-    local gcount = #genome - 1
+    local gcount = genome:count()-1
     local val = bit.band(gcount, 1)
-    val = bit.bor(val, bit.lshift(genome[1].sourceType, 1) )
-    val = bit.bor(val, bit.lshift(genome[gcount].sourceType, 2) )
-    val = bit.bor(val, bit.lshift(genome[1].sinkType, 3) )
-    val = bit.bor(val, bit.lshift(genome[gcount].sinkType, 4) )
-    val = bit.bor(val, bit.lshift(bit.band(genome[1].sourceNum, 1), 5))
-    val = bit.bor(val, bit.lshift(bit.band(genome[1].sinkNum, 1), 6))
-    val = bit.bor(val, bit.lshift(bit.band(genome[gcount].sourceNum, 1), 7))
+    val = bit.bor(val, bit.lshift(genome:get(1).sourceType, 1) )
+    val = bit.bor(val, bit.lshift(genome:get(gcount).sourceType, 2) )
+    val = bit.bor(val, bit.lshift(genome:get(1).sinkType, 3) )
+    val = bit.bor(val, bit.lshift(genome:get(gcount).sinkType, 4) )
+    val = bit.bor(val, bit.lshift(bit.band(genome:get(1).sourceNum, 1), 5))
+    val = bit.bor(val, bit.lshift(bit.band(genome:get(1).sinkNum, 1), 6))
+    val = bit.bor(val, bit.lshift(bit.band(genome:get(gcount).sourceNum, 1), 7))
     return val
 end
 

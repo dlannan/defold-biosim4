@@ -27,8 +27,8 @@ jaro_winkler_distance = function(genome1, genome2)
 
     local i, j, l
     local m, t = 0, 0
-    local sl = table.count(s) -- // strlen(s);
-    local al = table.count(a) -- // strlen(a);
+    local sl = s:count() -- // strlen(s);
+    local al = a:count() -- // strlen(a);
 
     local maxNumGenesToCompare = 20
     sl = math.min(maxNumGenesToCompare, sl) -- // optimization: approximate for long genomes
@@ -80,12 +80,12 @@ end
 -- // Works only for genomes of equal length
 hammingDistanceBits = function(genome1, genome2)
 
-    assert(#genome1 == #genome2, "[ERROR] g1:"..#genome1.."   g2:"..#genome2)
+    assert(genome1:count() == genome2:count(), "[ERROR] g1:"..genome1:count().."   g2:"..genome2:count())
 
     local p1 = genome1
     local p2 = genome2
 
-    local numElements = table.count(genome1)
+    local numElements = genome1:count()
     local bytesPerElement = 4
     local lengthBytes = numElements * bytesPerElement
     local lengthBits = lengthBytes * 8
@@ -93,7 +93,7 @@ hammingDistanceBits = function(genome1, genome2)
 
     for index = 1, numElements do 
         -- print(p1[index]:GetData(), p2[index]:GetData())
-        bitCount = bitCount + bit.bxor(p1[index]:GetData(), p2[index]:GetData())
+        bitCount = bitCount + bit.bxor(p1:get(index):GetData(), p2:get(index):GetData())
     end
 
     -- // For two completely random bit patterns, about half the bits will differ,
@@ -109,7 +109,7 @@ end
 genomeSimilarity = function(g1, g2)
 
     if(p.genomeComparisonMethod == 0) then 
-        return jaro_winkler_distance(g1, g2);
+        return jaro_winkler_distance(g1, g2)
     elseif(p.genomeComparisonMethod == 1) then 
         return hammingDistanceBits(g1, g2)
     elseif(p.genomeComparisonMethod == 2) then 
