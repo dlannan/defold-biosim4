@@ -1,6 +1,12 @@
 
 require("utils.copies")
 
+
+-- // Draw agents
+local maxColorVal = 0xb0
+local maxLumaVal = 0xb0;
+local rgbToLuma = function(r, g, b) return (r+r+r+b+g+g+g+g) / 8 end
+
 -- // This holds all data needed to construct one image frame. The data is
 -- // cached in this structure so that the image writer can work on it in
 -- // a separate thread while the main thread starts a new simstep.
@@ -48,12 +54,6 @@ saveOneFrameImmed = function( data )
             -- //     color,  // rgb
             -- //     1.0);  // alpha
     end
-
-    -- // Draw agents
-    local maxColorVal = 0xb0
-    local maxLumaVal = 0xb0;
-
-    local rgbToLuma = function(r, g, b) return (r+r+r+b+g+g+g+g) / 8 end
 
     for i = 1, table.count(data.indivLocs) do
         local c = data.indivColors[i]
@@ -108,6 +108,22 @@ makeGeneticColor = function(genome)
     return val
 end
 
+makeRGBColor = function(genome)
+
+    local c = makeGeneticColor(genome)
+    local color = {}
+    color[0] = (c)                  -- // R: 0..255
+    color[1] = bit.lshift(bit.band(c, 0x1f), 3)   -- // G: 0..255
+    color[2] = bit.lshift(bit.band(c, 7), 5)      -- // B: 0..255
+
+    -- // Prevent color mappings to very bright colors (hard to see):
+    if (rgbToLuma(color[0], color[1], color[2]) > maxLumaVal) then
+        if (color[0] > maxColorVal) then color[0] = color[0] % maxColorVal end 
+        if (color[1] > maxColorVal) then color[1] = color[1] % maxColorVal end
+        if (color[2] > maxColorVal) then color[2] = color[2] % maxColorVal end 
+    end 
+    return color
+end
 
 -- // This is a synchronous gate for giving a job to saveFrameThread().
 -- // Called from the same thread as the main simulator loop thread during
@@ -138,7 +154,7 @@ ImageWriter.saveVideoFrame = function(self, simStep, generation)
 
         -- //todo!!!
         for index = 1, p.population do
-            indiv = peeps:getIndivIndex(index)
+            local indiv = peeps:getIndivIndex(index)
             if (indiv.alive) then
                 tinsert(self.data.indivLocs, indiv.loc)
                 tinsert(self.data.indivColors, makeGeneticColor(indiv.genome))

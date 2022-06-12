@@ -364,8 +364,9 @@ end
 
 -- // This prints a neural net in a form that can be processed with
 -- // graph-nnet.py to produce a graphic illustration of the net.
-Indiv.getIGraphEdgeList = function(self, lines) 
+Indiv.getIGraphEdgeList = function(self) 
 
+    local lines = ""
     for k, conn in pairs(self.nnet.connections) do 
 
         local line = ""
@@ -388,8 +389,9 @@ Indiv.getIGraphEdgeList = function(self, lines)
         line = line.."     "
         line = line..tostring(conn.weight)
 
-        tinsert(lines, line)
+        lines = lines..line.."\n"
     end 
+    return lines
 end
 
 -- // This function is used when an agent is spawned. This function converts the
@@ -439,7 +441,6 @@ Indiv.createWiringFromGenome = function(self)
             local newConn = table.shallowcopy(conn)
             tinsert(self.nnet.connections, newConn)
             -- // fix the destination neuron number
-            pprint(nodeMap, newConn)
             newConn.sinkNum = nodeMap[newConn.sinkNum].remappedNumber
             -- // if the source is a neuron, fix its number too              
             if (newConn.sourceType == NEURON) then

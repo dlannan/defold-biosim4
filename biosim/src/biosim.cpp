@@ -109,7 +109,7 @@ static int GetAgent(lua_State* L)
             for(int j = 0; j<list[i].size(); ++j) {
                 lua_pushnumber(L, i);
                 lua_pushnumber(L, list[i][j]);
-                lua_rawset(L, 6);
+                lua_rawset(L, 4);
             }
         }
     }
@@ -123,9 +123,9 @@ static int GetAgent(lua_State* L)
     int idx = 1;
     for(int p = 0; p < results.size(); ++p) {
         lua_pushnumber(L, results[p].x);
-        lua_rawseti(L, 3, idx++);
+        lua_rawseti(L, 2, idx++);
         lua_pushnumber(L, results[p].y);
-        lua_rawseti(L, 3, idx++);
+        lua_rawseti(L, 2, idx++);
     }
 
     for (auto& it: names) {
@@ -133,7 +133,7 @@ static int GetAgent(lua_State* L)
         // std::cout << it.first << "  " << it.second << std::endl;
         lua_pushnumber(L, it.second);
         lua_pushstring(L, it.first.c_str());
-        lua_rawset(L, 4);
+        lua_rawset(L, 3);
     }
     
     return 0;

@@ -115,7 +115,7 @@ local actionShortNameFunc = {
 -- // Useful for later processing by graph-nnet.py.
 actionShortName = function(action)
 
-    local func = actionShortNameFunc[sensor]
+    local func = actionShortNameFunc[action]
     if(func == nil) then print("[ERROR] Invalid Action Short Name: "..action); assert(false) end 
     return func()
 end

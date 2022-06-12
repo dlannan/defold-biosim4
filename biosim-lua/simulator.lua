@@ -187,6 +187,7 @@ simStep     = 0
 
 local DoSimStep = function( _ctx )
 
+    local processespop = 0 
     -- randomUint:initialize() -- // seed the RNG, each thread has a private instance
     if(generation < p.maxGenerations) then -- // generation loop
 
@@ -199,6 +200,7 @@ local DoSimStep = function( _ctx )
                     if (peeps:getIndivIndex(indivIndex).alive) then
                         simStepOneIndiv(peeps:getIndivIndex(indivIndex), simStep)
                     end
+                    processespop = processespop + 1
                 end 
 
                 -- // In single-thread mode: this executes deferred, queued deaths and movements,
@@ -209,7 +211,7 @@ local DoSimStep = function( _ctx )
                 simStep = simStep + 1
             end
 
-            print(simStep, p.stepsPerGeneration)
+            -- print(simStep, p.stepsPerGeneration)
             if(simStep >= p.stepsPerGeneration) then 
                 endOfGeneration(generation)
                 p:updateFromConfigFile(generation + 1)
@@ -217,7 +219,7 @@ local DoSimStep = function( _ctx )
                 -- // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
                 -- //     displaySampleGenomes(p.displaySampleGenomes)
                 -- // }
-                print("survivors:"..numberSurvivors)
+                -- print("survivors:"..numberSurvivors)
                 survivors = numberSurvivors
                 if (numberSurvivors == 0) then 
                     generation = 0  -- // start over
@@ -233,7 +235,7 @@ local DoSimStep = function( _ctx )
         --     break
         -- end 
     end 
-    return p.population, generation
+    return processespop, generation
 end 
 
 -- /********************************************************************************

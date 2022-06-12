@@ -280,7 +280,6 @@ cullUselessNeurons = function(connections, nodeMap)
             if (itNeuron.numOutputs == itNeuron.numSelfInputs) then --  // could be 0
                 allDone = false
                 -- // Find and remove connections from sensors or other neurons
-                pprint("Renmoving: ", itNeuron)
                 removeConnectionsToNeuron(connections, nodeMap, k)
                 tinsert(forRemoval, k)  
             end

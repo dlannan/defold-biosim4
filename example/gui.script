@@ -5,6 +5,7 @@ require('utils.table')
 
 -- Add the path - make requires simpler.
 local sim 		= require("biosim-lua.simulator")
+local Coord 	= require("biosim-lua.Coord")
 
 local WINDOW_SCALE 		= 1.5
 local AGENT_DATASIZE 	= 10
@@ -59,7 +60,6 @@ local function startSim(self)
 	-- biosim.SimulationStart("data/biosim4.ini")
 	self.iniTable = inifile.load('data/biosim4.ini', "biosim")	
 	self.population = self.iniTable.lookup["population"].value
-	self.popdatacount = self.population * AGENT_DATASIZE + 1
 
 	self.dataStore = {}
 	self.life_spans = {} 
@@ -80,10 +80,10 @@ local function stopSim(self)
 	local agents = {}
 	local genstats = {}
 	local count, generation, survivors = 2, 2, 0
-	while(count > 1) do
---		count = biosim.SimulationStep(agents, genstats)
-		generation, survivors, diversity = unpack(genstats)
-	end 
+-- 	while(count > 1) do
+-- --		count = biosim.SimulationStep(agents, genstats)
+-- 		generation, survivors, diversity = unpack(genstats)
+-- 	end 
 end 
 
 --------------------------------------------------------------------------------
@@ -270,8 +270,11 @@ function update(self, dt)
 
 	if imgui.button("Reload") then
 
+		pprint("Saving File...")
 		inifile.save("data/biosim4.ini", self.iniTable, "biosim")
+		pprint("Stopping sim...")
 		stopSim(self)
+		pprint("Starting sim...")
 		startSim(self)
 	end
 
@@ -332,15 +335,24 @@ function update(self, dt)
 		self.diversity_hist[generation] = diversity
 		self.dataStore  = {}
 	end 
-    print(count, generation, survivors)
+    -- print(count, generation, survivors)
 
-	if(count == self.popdatacount) then 
+	if(count == self.population) then 
 		drawpixels.fill(self.buffer_info, 255, 255, 255, 255)
 		local idx = 1
-		for k = 1, count-1, AGENT_DATASIZE do 
+		local locs = imageWriter.data.indivLocs
+		local colors = imageWriter.data.indivColors
+
+		for k = 1, count do 
 			self.dataStore[idx] = self.dataStore[idx] or {}
-			local x, y, sz, r, g, b  = unpack(agents, k, k+5)
-			local age, alive, startx, starty = unpack( agents, k+6, k+9 ) 
+			local indiv = peeps:getIndivIndex(k)
+			local color = makeRGBColor(indiv.genome)
+
+			local x, y, z = indiv.loc.x * p.displayScale,indiv.loc.y * p.displayScale,indiv.loc.z
+			local r, g, b = color[0], color[1], color[2]
+
+			local sz, age, alive, startx, starty = p.agentSize, indiv.age, indiv.alive, indiv.birthLoc.x, indiv.birthLoc.y 
+
 			drawpixels.filled_rect(self.buffer_info, x+1, y+1, sz, sz, r, g, b, 255, false)
 			
 -- print(x, y, sz, r, g, b)
@@ -377,17 +389,34 @@ function update(self, dt)
 		local points = {}
 		local names = {}
 		local joins = {}
-		-- local xscale = 513 / (596 * WINDOW_SCALE)
-		-- local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
-		-- local yscale = 512 / (596 * WINDOW_SCALE)
-		-- local posy = 512 - (self.mouse.y * yscale - 20)
-		print(posy, self.mouse.y, yscale)
---		biosim.GetAgent( linedata, points, names, joins, 300, 80.0 )
-		--pprint(joins)
-		drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
-		self.agent.nodes = points 
-		self.agent.names = names
-		self.agent.joins = joins
+
+		local xscale = 513 / (596 * WINDOW_SCALE)
+		local posx = (self.mouse.x - 347 * WINDOW_SCALE) * xscale
+		local yscale = 512 / (596 * WINDOW_SCALE)
+		local posy = 512 - (self.mouse.y * yscale - 20)
+
+		local loc = Coord.new()
+		loc.x = posx / p.displayScale
+		loc.y = posy / p.displayScale
+		loc.x = math.min(loc.x, grid:sizeX() - 1)
+		loc.y = math.min(loc.y, grid:sizeY() - 1)
+		loc.x = math.max(math.floor(loc.x + 0.4999), 0)
+		loc.y = math.max(math.floor(loc.y + 0.4999), 0)
+		pprint(loc)
+
+		if(grid:isOccupiedAt(loc) == true) then 
+			
+			local indiv = peeps:getIndiv( loc )
+			local linedata = indiv:getIGraphEdgeList()
+			pprint(linedata)
+			biosim.GetAgent( linedata, points, names, joins, 300, 80.0 )
+
+			--pprint(joins)
+			drawpixels.fill(self.buffer_agent, 0, 0, 0, 255)
+			self.agent.nodes = points 
+			self.agent.names = names
+			self.agent.joins = joins
+		end 
 	end
 
 	imgui.end_window()

@@ -95,7 +95,7 @@ end
 
 -- // Occupied means an agent is living there.
 Grid.isOccupiedAt = function(self, loc) 
-    return at ~= Grid.EMPTY and at ~= Grid.BARRIER 
+    return (self:at(loc) ~= Grid.EMPTY) and (self:at(loc) ~= Grid.BARRIER)
 end
 
 Grid.isBorder = function(self, loc) 

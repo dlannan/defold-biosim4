@@ -17,7 +17,6 @@ initializeGeneration0 = function()
         local indiv = peeps:getIndivIndex(index)
         indiv:initialize(index, grid:findEmptyLocation(), makeRandomGenome())
     end
-    pprint("ZERO FILL and BARRIER DONE")
 end
 
 -- // Requires a container with one or more parent genomes to choose from.
