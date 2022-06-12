@@ -1,3 +1,11 @@
+function string.split( str )
+    lines = {}
+    for s in str:gmatch("[^\r\n]+") do
+        table.insert(lines, s)
+    end
+    return lines 
+end
+
 function table.deepcopy(orig)
     local orig_type = type(orig)
     local copy

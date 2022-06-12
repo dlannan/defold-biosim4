@@ -214,7 +214,7 @@ local DoSimStep = function( _ctx )
             -- print(simStep, p.stepsPerGeneration)
             if(simStep >= p.stepsPerGeneration) then 
                 endOfGeneration(generation)
-                p:updateFromConfigFile(generation + 1)
+--                p:updateFromConfigFile(generation + 1)
                 local numberSurvivors = spawnNewGeneration(generation, murderCount)
                 -- // if (numberSurvivors > 0 && (generation % p.genomeAnalysisStride == 0)) {
                 -- //     displaySampleGenomes(p.displaySampleGenomes)
@@ -272,6 +272,20 @@ Sim.simulator = function(self, filename)
     
     -- TODO: Change from using threads to timer or similar.
     -- dmThread::New(DoSimStep, 0x80000, nullptr, "biosim_thread");
+end 
+
+Sim.simulationRestart = function(tbl)
+    p:setDefaults()
+    p:updateFromData(0, tbl)
+    p:checkParameters()      -- // check and report any problems
+    randomUint:initialize()             -- // seed the RNG for main-thread use
+
+    grid:init(p.sizeX, p.sizeY)         -- // the land on which the peeps live
+    signals:init(p.signalLayers, p.sizeX, p.sizeY)  -- // where the pheromones waft
+    peeps:init(p.population)            -- // the peeps themselves
+
+    initializeGeneration0()     -- // starting population
+    runMode = RunMode.PAUSE
 end 
 
 Sim.simulationStep = function( void )

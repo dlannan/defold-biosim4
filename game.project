@@ -10,8 +10,9 @@ height = 960
 
 [project]
 title = biosim
-custom_resources = example, biosim-lua
+custom_resources = example, biosim-lua, data/biosim4.ini
 developer = David Lannan
+bundle_resources = 
 dependencies#0 = https://github.com/AGulev/drawpixels/archive/master.zip
 dependencies#1 = https://github.com/dlannan/extension-imgui/archive/master.zip
 

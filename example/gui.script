@@ -53,12 +53,16 @@ end
 
 --------------------------------------------------------------------------------
 
-local function startSim(self)
+local function startSim(self, reload)
 
 	self.paused = true
 	self.generation = 0
-	-- biosim.SimulationStart("data/biosim4.ini")
-	self.iniTable = inifile.load('data/biosim4.ini', "biosim")	
+	if(reload == nil or self.iniTable == nil) then 
+		self.iniTable = inifile.load('data/biosim4.ini', "biosim") 
+		pprint(self.iniTable)
+	end
+	
+	sim.simulationRestart(self.iniTable.biosim)
 	self.population = self.iniTable.lookup["population"].value
 
 	self.dataStore = {}
@@ -275,7 +279,7 @@ function update(self, dt)
 		pprint("Stopping sim...")
 		stopSim(self)
 		pprint("Starting sim...")
-		startSim(self)
+		startSim(self, 1)
 	end
 
 	imgui.same_line(80)

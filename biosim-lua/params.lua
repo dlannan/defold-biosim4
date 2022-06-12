@@ -146,6 +146,17 @@ ParamManager.updateFromConfigFile = function(self, generationNumber)
     end 
 end 
 
+-- Essentially merge config into params
+ParamManager.updateFromData = function(self, generationNumber, data)
+    
+    -- Iterate the config file and overwrite the params manager config
+    for k,v in pairs(data) do 
+        if(self.privParams[v.value]) then v.value = self.privParams[v.value] end
+        self.privParams[v.key] = v.value 
+    end 
+end 
+
+
 ParamManager.checkParameters = function(self)
 end 
 

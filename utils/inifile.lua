@@ -31,15 +31,20 @@ local LIP = {};
 --@param fileName The name of the INI file to parse. [string]
 --@return The table containing all data from the INI file. [table]
 function LIP.load(fileName, defaultsection)
+
 	assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.')
-	local file = assert(io.open(fileName, 'r'), 'Error loading file : ' .. fileName)
-	local data = {};
-	local section = defaultsection or "default";
+	-- local file = assert(io.open(fileName, 'r'), 'Error loading file : ' .. fileName)
+	local filedata, error = sys.load_resource("/"..fileName)	
+	assert(filedata ~= nil, "[ERROR] Cannot load file: "..fileName.." with error: "..tostring(error))
+	local lines = string.split(filedata)
+
+	local data = {}
+	local section = defaultsection or "default"
 	data[section] = {}
 	data.lookup = {}
 
 	local paramcomments = {}
-	for line in file:lines() do
+	for _, line in pairs(lines) do
 		-- Empty lines and comments are attaches to the following param.
 		local comment = line:sub(1, 1)
 		if(comment == '#') then tinsert( paramcomments, line ) end
@@ -64,7 +69,6 @@ function LIP.load(fileName, defaultsection)
 			paramcomments = {}
 		end
 	end
-	file:close()
 	return data
 end
 
